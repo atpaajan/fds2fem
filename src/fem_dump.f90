@@ -145,7 +145,7 @@ subroutine dump_fem_data_sdf()
   use string_handling
   implicit none
 
-  integer :: i,j,ios,ntimes,nnodes
+  integer :: i,j,ios
   character(len=chr80) :: filename
 
   filename=trim(basename(fem_input_file)) // '_nodes.sdf'

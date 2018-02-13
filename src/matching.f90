@@ -58,7 +58,6 @@ subroutine translate_manual()
   implicit none
 
   integer :: i
-  real(kind=rk) :: dx,dy,dz,dr
 
   if (.not. manual_translate) then
     ! Nothing to be done
@@ -112,8 +111,6 @@ subroutine rotate_manual()
   implicit none
 
   integer :: i
-
-  real(kind=rk) :: phi
 
   real(kind=rk), dimension(3)   :: v
   real(kind=rk), dimension(3,3) :: rm
@@ -496,7 +493,7 @@ function measure()
   implicit none
  
   integer :: i,j
-  real(kind=rk) :: dr_sq,dx,dy,dz
+  real(kind=rk) :: dr_sq,dx,dy
   real(kind=rk) :: measure,mindist,mindist_sum
 
   mindist_sum=0.0

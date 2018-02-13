@@ -18,10 +18,6 @@ subroutine ansys_reader_module()
   use string_handling
   implicit none
 
-  integer :: i,j,ios
-  real(kind=rk) :: t1,t2
-  character(len=chr80) :: stmp 
-
   !---------------
   ! Initialization
   !---------------  

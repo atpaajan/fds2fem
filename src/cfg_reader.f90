@@ -55,7 +55,7 @@ subroutine display_header()
   both=date(7:8) // '.' // date(5:6) // '.' // &
        date(1:4) // ' ' // time(1:2) // ':' // time(3:4)
 
-  write(*,'(11(a))') 'FDS2FEM version 1.0'
+  write(*,'(11(a))') 'FDS2FEM version 2.0'
   write(*,'(2(a))')  'Run: ', trim(both)
 
 end subroutine display_header
@@ -75,7 +75,7 @@ subroutine display_usage(program_name)
   write(*,'(a)')     '  -v, --version      Print version information'
   write(*,'(a)')     '  -f, --full-output  For debugging purposes'
   write(*,'(a)')     ''
-  write(*,'(a)')     'Coupling tool for FDS-ABAQUS/ANSYS simulations'
+  write(*,'(a)')     'Coupling tool for FDS/CFAST/Time-temp curve - ABAQUS/ANSYS simulations'
   write(*,'(a)')     ''
 
 end subroutine display_usage
@@ -87,8 +87,8 @@ subroutine display_version()
   use global_constants
   implicit none
 
-  write(*,'(a)') 'FDS2FEM version 1.0'
-  write(*,'(a)') 'VTT Technical Research Centre of Finland, 2012'
+  write(*,'(a)') 'FDS2FEM version 2.0'
+  write(*,'(a)') 'VTT Technical Research Centre of Finland Ltd, 2018'
   
 end subroutine display_version
 
@@ -198,6 +198,9 @@ subroutine parse_configuration_file
   dump_fds_data           = 'off'
   dump_fds_model          = 'off'
 
+  dump_cfast_nodes        = 'off'
+  dump_cfast_data         = 'off'
+
   dump_fem_nodes          = 'off'
   dump_fem_data           = 'off'
   dump_fem_model          = 'off'
@@ -229,6 +232,8 @@ subroutine parse_configuration_file
 
   fds_data_available      = .false.
   fds_xyz_available       = .false.
+  cfast_data_available    = .false.
+  cfast_xyz_available     = .false.
   fem_data_available      = .false.
   fem_xyz_available       = .false.
 
@@ -241,8 +246,14 @@ subroutine parse_configuration_file
   ansys_ast               = .false.
 
   hcoeff                  = 25.0
-  emissivity                  = 0.90
+  emissivity              = 0.90
 
+  cfast_input             = .false.
+  iso_curve               = .false.
+  iso_ntimes              = 361
+  iso_tbegin              = 0.0
+  iso_tend                = 3600.0
+  
   !----------------------------
   ! User given parameter values
   !----------------------------
@@ -270,6 +281,41 @@ subroutine parse_configuration_file
     read(input_line,*,iostat=ios) identifier,(paramstr(i),i=1,3)
 
     select case(identifier)
+
+    case ('iso_curve') 
+      !------------------------------------------
+      ! temperature-time curve (needs nset_input)
+      !------------------------------------------
+      if (len_trim(paramstr(1)) /= 0) then
+        if (trim(lowercase(paramstr(1))) == 'on') then
+          iso_curve=.true.
+        else if (trim(lowercase(paramstr(1))) == 'off') then
+          iso_curve=.false.
+        else
+          write(*,'(5(a))') 'ERROR: ISO curve has to be either ON or OFF (file ', &
+            trim(quote(config_file)), ', line ', trim(int2str(line_number)), ')'
+          stop
+        end if
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+    case ('cfast_input')
+      !------------
+      ! cfast_input
+      !------------
+      ! The body of the CFAST input file name
+      if (len_trim(paramstr(1)) /= 0) then
+        fds_input_file=trim(paramstr(1))
+      else
+        write(*,'(5(a))') 'ERROR: missing CFAST input file (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+      cfast_input = .true.
+
     case ('fds_input')
       !----------
       ! fds_input
@@ -417,6 +463,46 @@ subroutine parse_configuration_file
 
       if (trim(dump_fds_model) /= 'off'  .and. &
           trim(dump_fds_model) /= 'vtk') then
+        write(*,'(7(a))') 'ERROR: unknown dump format ', trim(quote(dump_fds_data)), &
+            ' (file ', trim(quote(config_file)), ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+    case ('dump_cfast_nodes')
+      !-----------------
+      ! dump_cfast_nodes
+      !-----------------
+      if (len_trim(paramstr(1)) /= 0) then
+        dump_cfast_nodes=trim(lowercase(paramstr(1)))
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+      if (trim(dump_cfast_nodes) /= 'off'  .and. &
+          trim(dump_cfast_nodes) /= 'xyz'  .and. &
+          trim(dump_cfast_nodes) /= 'vtk') then
+        write(*,'(7(a))') 'ERROR: unknown dump format ', trim(quote(dump_fds_nodes)), &
+            ' (file ', trim(quote(config_file)), ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+    case ('dump_cfast_data')
+      !----------------
+      ! dump_cfast_data
+      !----------------
+      if (len_trim(paramstr(1)) /= 0) then
+        dump_cfast_data=trim(lowercase(paramstr(1)))
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+      if (trim(dump_cfast_data) /= 'off'  .and. &
+          trim(dump_cfast_data) /= 'sdf'  .and. &
+          trim(dump_cfast_data) /= 'vtk') then
         write(*,'(7(a))') 'ERROR: unknown dump format ', trim(quote(dump_fds_data)), &
             ' (file ', trim(quote(config_file)), ', line ', trim(int2str(line_number)), ')'
         stop
@@ -844,6 +930,54 @@ subroutine parse_configuration_file
         stop
       end if
 
+    case ('iso_ntimes')
+       !-----------
+       ! iso_ntimes
+       !-----------
+      if (len_trim(paramstr(1)) /= 0) then
+        read(paramstr(1),*,iostat=ios) iso_ntimes
+        if (ios /= 0) then
+          write(*,'(2(a))') 'ERROR: in reading value for parameter ', trim(quote(identifier))
+          stop
+        end if
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+    case ('iso_tbegin')
+       !-----------
+       ! iso_tbegin
+       !-----------
+      if (len_trim(paramstr(1)) /= 0) then
+        read(paramstr(1),*,iostat=ios) iso_tbegin
+        if (ios /= 0) then
+          write(*,'(2(a))') 'ERROR: in reading value for parameter ', trim(quote(identifier))
+          stop
+        end if
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
+    case ('iso_tend')
+       !---------
+       ! iso_tend
+       !---------
+      if (len_trim(paramstr(1)) /= 0) then
+        read(paramstr(1),*,iostat=ios) iso_tend
+        if (ios /= 0) then
+          write(*,'(2(a))') 'ERROR: in reading value for parameter ', trim(quote(identifier))
+          stop
+        end if
+      else
+        write(*,'(5(a))') 'ERROR: missing parameter (file ', trim(quote(config_file)), &
+          ', line ', trim(int2str(line_number)), ')'
+        stop
+      end if
+
     case default
       write(*,'(7(a))') 'ERROR: unknown identifier ', trim(quote(identifier)), &
         ' (file ', trim(quote(config_file)), ', line ', trim(int2str(line_number)), ')'
@@ -893,6 +1027,87 @@ subroutine parse_configuration_file
     end if
   end if
 
+  ! Time-temp curve, some input checks
+  if (iso_curve) then
+     if (fds_input_file .ne. '') then
+        If (cfast_input) Then
+           write(*,'(a)') 'ERROR: ISO curve and CFAST input are both selected'
+           stop
+        Else
+           write(*,'(a)') 'ERROR: ISO curve and FDS input are both selected'
+           stop
+        End If
+     end if
+     if (trim(transfer_quantity) == 'net_heat_flux') then
+        write(*,'(a)') 'ERROR: ISO curve and net_heat_flux as transfer quantity'
+        stop
+     end if
+     if (hcoeff < 0.0) then
+        ! If negative heat transfer coefficient is given, read from bndf-file, not for ISO
+        write(*,'(a)') 'ERROR: ISO curve and hcoeff < 0'
+        stop
+     end if
+     if (trim(transfer_quantity) == 'adiabatic_surface_temperature') then
+        Write(*,'(a)') 'ISO curve and adiabatic surface temperature transfer quantity'
+        Write(*,'(a,f6.3)') '   emissivity:           ',emissivity
+        Write(*,'(a,f6.3)') '   heat transfer coeff.: ',hcoeff
+        If (emissivity < 0.0 .Or. emissivity > 1.0 .Or. hcoeff < 0.0) Then
+           Write(*,'(a)') 'ERROR: Unphysical parameter values for emissivity and/or h_coeff'
+           Stop
+        End If
+     End If
+     If (Trim(mapping_method) /= 'devc_to_nset') Then
+        Write(*,'(a)') 'WARNING: ISO curve and mapping is not devc_to_nset'
+        Write(*,'(a)') '         Mapping method is set to devc_to_nset'
+     End If
+     If (match_translate .Or. manual_translate .Or. automatic_translate) Then
+        write(*,'(a)') 'WARNING: ISO curve, no translations done for devc_to_nset mapping'
+     End If
+     If (match_rotate .Or. manual_rotate .Or. automatic_rotate) Then
+        write(*,'(a)') 'WARNING: ISO curve, no rotations done for devc_to_nset mapping'
+     End If
+     If (iso_tend <= iso_tbegin) Then
+        Write(*,'(a)') 'ERROR: ISO curve, tend <= tbegin'
+        Stop
+     End If
+     If (iso_ntimes < 2) Then
+        Write(*,'(a)') 'ERROR: ISO curve, too few time points'
+        Stop
+     End If
+
+     cfast_input         = .false.
+     fds_output          = 'devc'
+     fds_input_file      = ''
+     dump_fds_nodes      = 'off'
+     dump_fds_data       = 'off'
+     dump_fds_model      = 'off'
+     fds_statistics      = .false.
+     mapping_method      = 'devc_to_nset'
+     match_translate     = .false.
+     match_rotate        = .false.
+     manual_translate    = .false.
+     manual_rotate       = .false.
+     automatic_translate = .false.
+     automatic_rotate    = .false.
+  end if
+
+  ! CFAST input, set some varibles (ToDo: input checks)
+  If (cfast_input) Then
+     iso_curve           = .false.
+     fds_output          = 'devc'
+     dump_fds_nodes      = 'off'
+     dump_fds_data       = 'off'
+     dump_fds_model      = 'off'
+     fds_statistics      = .false.
+     mapping_method      = 'devc_to_nset'
+     match_translate     = .false.
+     match_rotate        = .false.
+     manual_translate    = .false.
+     manual_rotate       = .false.
+     automatic_translate = .false.
+     automatic_rotate    = .false.
+  End If
+  
   !-----------------
   ! Ready to proceed
   !-----------------
@@ -912,7 +1127,7 @@ subroutine parse_connectivity_file()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,nlines,ncols_min,ncols_max
+  integer :: i,j,ios,nlines,ncols_min,ncols_max
   integer :: i_ncols_min,i_ncols_max
 
   integer, dimension(:), allocatable :: ncols
@@ -967,19 +1182,31 @@ subroutine parse_connectivity_file()
   end do count_lines
 
   if (nlines == 0) then
-    if (trim(fds_output) == 'devc') then
-      write(*,'(2(a))') 'ERROR: no input found in NSET-DEVC connectivity file ', &
-        trim(quote(nset_input_file))
-      stop
-    else if (trim(fds_output) == 'bndf') then
-      write(*,'(2(a))') 'ERROR: no input found in NSET-BNDF connectivity file ', &
-        trim(quote(nset_input_file))
-      stop
-    else
-      write(*,'(2(a))') 'ERROR: no input found in NSET connectivity file ', &
-        trim(quote(nset_input_file))
-      stop
-    end if
+     if (.not.iso_curve) then
+        If (cfast_input) Then
+           write(*,'(2(a))') 'ERROR: no input found in NSET-Target connectivity file ', &
+                trim(quote(nset_input_file))
+           stop
+        Else
+           if (trim(fds_output) == 'devc') then
+              write(*,'(2(a))') 'ERROR: no input found in NSET-DEVC connectivity file ', &
+                   trim(quote(nset_input_file))
+              stop
+           else if (trim(fds_output) == 'bndf') then
+              write(*,'(2(a))') 'ERROR: no input found in NSET-BNDF connectivity file ', &
+                   trim(quote(nset_input_file))
+              stop
+           else
+              write(*,'(2(a))') 'ERROR: no input found in NSET connectivity file ', &
+                   trim(quote(nset_input_file))
+              stop
+           end if
+        End If
+     else
+        write(*,'(2(a))') 'ERROR: ISO curve, no input found in NSET connectivity file ', &
+             trim(quote(nset_input_file))
+        stop
+     end if
   end if
 
   rewind(iochannel(1))
@@ -1009,6 +1236,15 @@ subroutine parse_connectivity_file()
     read_all_fds_data=.true.
   end if
 
+  ! ISO nset: first column fem-node, second column "iso_834" etc time-temp curve.
+  ! Additional columns (3-5):
+  !                   eps hcoeff time_shift
+  ! nset-name iso_834 0.9 25.0   0.0
+  !                   eps hcoeff
+  ! nset-name iso_834 0.9 25.0  
+  !                   time_shift
+  ! nset-name iso_834 0.0
+  
   rewind(iochannel(1))
 
   allocate(connectivity_table(nlines,ncols_max),stat=ios); call error_allocate(ios)

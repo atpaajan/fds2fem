@@ -1,9 +1,12 @@
 !--------------------------------------------------------------------------
 ! Program:      fds2fem
 ! Description:  FDS-ABAQUS/ANSYS coupling tool for fire-structural analysis
-! Version:      1.0
-! Date:         06.11.2012
-! Author:       VTT Technical Research Centre of Finland
+!               v2: CFAST and time-temperature curves input added
+! Version:      2.0
+! Date:         29.1.2018
+! Authorq:      Timo Korhonen/Antti Paajanen
+! VTT Technical Research Centre of Finland Ltd
+!
 !--------------------------------------------------------------------------
 !
 ! Fixes, improvements and questions
@@ -22,6 +25,34 @@
 !   - What if a node belongs to more than one node set in ABAQUS?
 !
 !--------------------------------------------------------------------------
+! Time-temperature curves input
+!   - iso_834, ec1-1-1_hc, ec1-1-2_ex, astm_e119 implemented
+!   - Only devc_to_nset mapping (devc => time-temp "name")
+!   - Always uses nset-connectivity file, e.g.:
+!     nset iso_834 epsilon hcoeff time_shift
+!                  epsilon hcoeff (time_shift=0s)
+!                  time_shift (use default eps&hc)
+!   - Hcoeff/epsilon read from config-file (default) or nset-file
+!   - Transfer quantities: T_surf, T_ast (same output, because "furnace")
+!   - No vtk/xyz etc output for time-temp curve inputs
+!
+! CFAST zone model input as target outputs: CHID_w.csv file (CHID.in also needed)
+!   - Only devc_to_nset mapping (devc => target ID/number)
+!   - Always uses nset-connectivity file:
+!     Give either target index or target name
+!     Many targets can be given on one row => use average (and average emissivity)
+!   - Transfer quantities: T_surf, T_ast, q_net (just Ansys, not tested)
+!   - Emissivity input read from CFAST input file (CHID.in)
+!   - Hcoeff read from config-file
+!   - vtk/xyz/etc output possible, tested for vtk
+!
+!   ToDo: Ansys + Cfast + Tast? How epsilon & hc are transfered?
+!         Ansys output: T_ast only with hcoeff read (Cfast: fill the hcoeff time series
+!                        with the same constant hcoeff? (Epsilon from CFAST input file)
+!         COMPA input, use nset-file (to start with)
+!         TARGET input, use xyz ? mikä huone, jos seinän molemmin puolin inputtia
+!
+!--------------------------------------------------------------------------
 
 program main
   use global_constants
@@ -30,6 +61,9 @@ program main
 
   use cfg_reader
 
+  use iso_reader
+  use cfast_dump
+  
   use fds_reader
   use fds_stats
   use fds_dump
@@ -47,6 +81,7 @@ program main
   
   use matching
   use mapping
+  use iso_mapping
   
   implicit none
 
@@ -66,7 +101,11 @@ program main
   ! MODULE: FDS reader
   !===================
 
-  call fds_reader_module()
+  if (iso_curve .Or. cfast_input) then
+     call iso_reader_module()
+  else
+     call fds_reader_module()
+  end if
 
   ! Relevant new arrays
   !   fds_id(:),
@@ -76,12 +115,6 @@ program main
   !   fds_patch(:),
   !   fds_xyz(:,:),
   !   fds_data(:,:)
-
-  !=======================
-  ! MODULE: FDS statistics
-  !=======================
-
- ! call fds_stats_module()
 
   !-----------
   ! FEM reader
@@ -133,7 +166,8 @@ program main
   ! MODULE: Mesh mapping
   !=====================
 
-  call mapping_module()
+  If (.not.iso_curve) Call mapping_module() ! FDS and CFAST
+  If (     iso_curve) Call mapping_iso()    ! Time-temperature curve
 
   ! Relevant new arrays
   !   fem_time(:),
@@ -143,7 +177,7 @@ program main
   ! MODULE: FDS statistics
   !=======================
 
-  call fds_stats_module()
+  If (.Not.iso_curve .And. .Not.cfast_input) Call fds_stats_module()
 
   !==========================
   ! MODULE: ABAQUS statistics
@@ -155,7 +189,13 @@ program main
   ! MODULE: FDS dump
   !=================
 
-  call fds_dump_module()
+  If (.Not.iso_curve .And. .Not.cfast_input) Call fds_dump_module()
+
+  !===================
+  ! MODULE: CFAST dump
+  !===================
+
+  If (cfast_input) Call cfast_dump_module()
 
   !================
   ! FEM dump module

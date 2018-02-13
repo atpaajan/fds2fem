@@ -63,7 +63,7 @@ subroutine dump_abaqus_physical()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,nlines
+  integer :: i,ios,nlines
   logical :: omit_lines,replace
   character(len=input_line_length) :: keyword,input_line
   character(len=input_line_length), dimension(:), allocatable :: abaqus_input
@@ -303,7 +303,7 @@ subroutine dump_abaqus_boundaries()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,nlines
+  integer :: i,j,ios,nlines
   logical :: omit_lines,replace
   character(len=chr80) :: bc_file
   character(len=input_line_length) :: keyword,input_line
@@ -424,7 +424,7 @@ subroutine dump_abaqus_cradiate()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,nlines
+  integer :: i,j,ios,nlines
   logical :: omit_lines,replace
   character(len=chr80) :: cradiate_file
   character(len=input_line_length) :: keyword,input_line
@@ -437,7 +437,7 @@ subroutine dump_abaqus_cradiate()
   do j=1,nnodes_fem
     write(iochannel(1),'(3(a))') '** Name: Cradiate-BC-', trim(int2str(j)), ' Type: Radiative heat flux'
     write(iochannel(1),'(2(a))') '*Cradiate, amplitude=AMP-', trim(int2str(j)) 
-    write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', emissivity
+    write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', abaqus_node_emissivity(j)
   end do
 
   close(unit=iochannel(1))
@@ -545,7 +545,7 @@ subroutine dump_abaqus_cfilm()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,nlines
+  integer :: i,j,ios,nlines
   logical :: omit_lines,replace
   character(len=chr80) :: cfilm_file
   character(len=input_line_length) :: keyword,input_line
@@ -568,7 +568,7 @@ subroutine dump_abaqus_cfilm()
     do j=1,nnodes_fem
       write(iochannel(1),'(3(a))') '** Name: Cfilm-BC-', trim(int2str(j)), ' Type: Convective heat flux'
       write(iochannel(1),'(2(a))') '*Cfilm, amplitude=AMP-', trim(int2str(j)) 
-      write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', hcoeff
+      write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', abaqus_node_hcoeff(j)
     end do
   end if
 

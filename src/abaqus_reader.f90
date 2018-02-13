@@ -277,8 +277,6 @@ subroutine cat_input_files()
   character(len=chr80) :: output_file,keyword,paramstr,ctmp1,ctmp2,ctmp3,ctmp4
   character(len=input_line_length) :: input_line
 
-  real(kind=rk) :: rtmp1
-
   integer, dimension(:), allocatable :: line_number
 
   character(len=chr80), dimension(:), allocatable :: input_file  
@@ -526,7 +524,7 @@ subroutine transl_instance_nodes()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,i_instance
+  integer :: i,ios,i_instance
   real(kind=rk) :: dx,dy,dz,dr
 
   logical, dimension(:), allocatable :: translate
@@ -583,7 +581,7 @@ subroutine rotate_instance_nodes()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,i_instance
+  integer :: i,ios,i_instance
   real(kind=rk) :: dx,dy,dz,dr,theta
 
   logical, dimension(:), allocatable :: rotate
@@ -642,14 +640,14 @@ subroutine parse_keywords()
   use error_messages
   implicit none
 
-  integer :: ios,line_number,i,j,k,ti,nlines,from_instance,n1,n2
+  integer :: ios,line_number,i,j,nlines,from_instance,n1,n2
   integer :: i_nset,i_ngen,i_ncopy,i_node,i_part,i_nfill,i_nmap,i_system,i_element
   integer :: i_assembly,i_include,i_instance,i_end_assembly,i_end_instance,i_end_part
 
   logical :: in_part,in_instance,in_assembly,in_node,in_nset,in_element
 
   character(len=1) :: lastchr
-  character(len=chr80) :: str1,str2,paramstr
+  character(len=chr80) :: paramstr
   character(len=input_line_length) :: keyword,input_line
 
   in_part=.false.; in_instance=.false.; in_assembly=.false.
@@ -917,7 +915,7 @@ subroutine parse_keywords()
     allocate(instance_rotate(n_instance,7),stat=ios);    call error_allocate(ios)
     instance_translate = 0.0
     instance_rotate    = 0.0
-
+    
     allocate(instance_lines(n_instance,2),stat=ios); call error_allocate(ios)
     instance_lines = 0
   end if
@@ -1544,7 +1542,7 @@ subroutine read_part_nodes
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,line_number
+  integer :: j,ios,line_number
   integer :: i_node,i_part_node
 
   character(len=input_line_length) :: input_line
@@ -1621,7 +1619,7 @@ subroutine read_part_nsets
   use string_handling
   implicit none
 
-  integer :: i,j,k,n1,n2,ios,line_number
+  integer :: i,j,n1,n2,ios,line_number
   integer :: i_nset,i_part_nset,ncols
 
   character(len=input_line_length) :: input_line
@@ -1711,7 +1709,7 @@ subroutine read_part_elements()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,line_number
+  integer :: j,ios,line_number
   integer :: i_element,i_part_element
 
   character(len=chr80) :: etype
@@ -1825,7 +1823,7 @@ subroutine read_instance_nodes
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,line_number
+  integer :: j,ios,line_number
   integer :: i_node,i_instance_node
 
   character(len=input_line_length) :: input_line
@@ -1904,7 +1902,7 @@ subroutine read_instance_nsets
   use string_handling
   implicit none
 
-  integer :: i,j,k,n1,n2,ios,line_number
+  integer :: i,j,n1,n2,ios,line_number
   integer :: i_nset,i_instance_nset,ncols
 
   character(len=input_line_length) :: input_line
@@ -1999,7 +1997,7 @@ subroutine read_instance_elements()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,line_number
+  integer :: j,ios,line_number
   integer :: i_element,i_instance_element
 
   character(len=chr80) :: etype
@@ -2115,7 +2113,7 @@ subroutine read_assembly_nsets
   use string_handling
   implicit none
 
-  integer :: i,j,k,n1,n2,ios,line_number
+  integer :: i,j,n1,n2,ios,line_number
   integer :: i_nset,i_assembly_nset,ncols
   integer :: i_instance
 
@@ -2231,7 +2229,7 @@ subroutine inherit_instance_nodes()
   use string_handling
   implicit none
   
-  integer :: i,j,k,ios,i_instance,inode_model,nnodes_model
+  integer :: i,ios,i_instance,inode_model,nnodes_model
   character(len=chr80) :: stmp80
 
   !----------------------------------------------
@@ -2326,8 +2324,7 @@ subroutine inherit_instance_nsets()
   use string_handling
   implicit none
   
-  integer :: i,j,k,ios,i_instance,inode_model,nnodes_model
-  character(len=chr80) :: stmp80
+  integer :: i,ios,i_instance,inode_model,nnodes_model
 
   !---------------------------------------------------------------------
   ! Count the number of nodes belonging to node sets in the ABAQUS model
@@ -2430,8 +2427,7 @@ subroutine inherit_instance_elements()
   use string_handling
   implicit none
   
-  integer :: i,j,k,ios,i_instance,ielement_model,nelements_model
-  character(len=chr80) :: stmp80
+  integer :: i,ios,i_instance,ielement_model,nelements_model
 
   !-------------------------------------------------
   ! Count the number of elements in the ABAQUS model
@@ -2523,10 +2519,10 @@ subroutine create_element_node_map()
   use string_handling
   implicit none
   
-  integer :: i,j,k,ios,n_model_node,n_model_element,itmp
+  integer :: i,j,k,ios,n_model_node,n_model_element
   logical :: found
   integer :: ifrac
-  real(kind=rk) :: rfrac,time,t1,t2
+  real(kind=rk) :: rfrac
 
   n_model_node=ubound(model_node_number,1)
   n_model_element=ubound(model_element_node,1)
@@ -2594,10 +2590,10 @@ subroutine create_node_surface_map()
   use string_handling
   implicit none
 
-  integer :: i,j,k,l,m,n,ios,inode_abaqus,n_model_node,n_nodes_face
-  integer :: node_number,n_model_nset,nnodes_patch,common_nodes
-  integer :: n_model_element,n_faces,node_order,n_faces_max,nn
-  integer :: type_a,type_b,n_ef,n_ief,ifrac,i_face,n_face
+  integer :: i,j,k,l,m,n,ios,n_model_node,n_nodes_face
+  integer :: n_model_nset,nnodes_patch,common_nodes
+  integer :: n_model_element,n_faces,node_order,n_faces_max
+  integer :: type_a,type_b,ifrac,i_face,n_face
 
   integer, dimension(8) :: node_a,node_b
 
@@ -2630,8 +2626,6 @@ subroutine create_node_surface_map()
   logical, dimension(:,:), allocatable :: model_element_face_mask
   logical, dimension(:,:), allocatable :: model_element_face_mask_2
  
-  real(kind=rk) :: t1,t2,time
-
   !-------------
   ! Preparations
   !-------------
@@ -3503,7 +3497,6 @@ subroutine filter_abaqus_data()
 
   integer :: i,j,k,ios,inode_abaqus
   integer :: n_model_nset
-  logical :: found
   character(len=chr80) :: stmp
 
   logical, dimension(:), allocatable :: model_nset_mask
@@ -3545,9 +3538,9 @@ subroutine filter_abaqus_data()
   !   model_nset_instance(:)
   !--------------------------
 
-  allocate(abaqus_face_type(ubound(model_face_type,1)),stat=ios);   call error_allocate(ios)
-  allocate(abaqus_face_node(ubound(model_face_node,1),4),stat=ios); call error_allocate(ios)
-  abaqus_face_type=model_face_type; abaqus_face_node=0
+!!$  allocate(abaqus_face_type(ubound(model_face_type,1)),stat=ios);   call error_allocate(ios)
+!!$  allocate(abaqus_face_node(ubound(model_face_node,1),4),stat=ios); call error_allocate(ios)
+!!$  abaqus_face_type=model_face_type; abaqus_face_node=0
 
   ! Relevant arrays
   !--------------------------
@@ -3598,51 +3591,51 @@ subroutine filter_abaqus_data()
   if (trim(transfer_quantity) == 'adiabatic_surface_temperature' .or. &
     trim(transfer_quantity) == 'net heat flux') then
 
-  inode_abaqus=1
-  do i=1,ubound(model_nset_name,1)
-    if (model_nset_mask(i) .eqv. .true.) then
-
-      node_loop: do j=1,ubound(model_node_name,1)
-        if (trim(model_node_instance(j)) == trim(model_nset_instance(i))) then
-          if (model_node_number(j) == model_nset_node(i)) then
-            
-            abaqus_xyz(inode_abaqus,1:3)       = model_node_xyz(j,1:3)
-            abaqus_node_name(inode_abaqus)     = model_node_name(j)
-            abaqus_nset(inode_abaqus)          = trim(model_nset_instance(i)) // '.' // trim(model_nset_name(i))
-            abaqus_node_area(inode_abaqus)     = model_node_area(j)
-
-            node_map_1(inode_abaqus)=j
-            node_map_2(j)=inode_abaqus
-
-            inode_abaqus=inode_abaqus+1
-          end if
+     inode_abaqus=1
+     do i=1,ubound(model_nset_name,1)
+        if (model_nset_mask(i) .eqv. .true.) then
+           
+           node_loop: do j=1,ubound(model_node_name,1)
+              if (trim(model_node_instance(j)) == trim(model_nset_instance(i))) then
+                 if (model_node_number(j) == model_nset_node(i)) then
+                    
+                    abaqus_xyz(inode_abaqus,1:3)       = model_node_xyz(j,1:3)
+                    abaqus_node_name(inode_abaqus)     = model_node_name(j)
+                    abaqus_nset(inode_abaqus)          = trim(model_nset_instance(i)) // '.' // trim(model_nset_name(i))
+                    abaqus_node_area(inode_abaqus)     = model_node_area(j)
+                    
+                    node_map_1(inode_abaqus)=j
+                    node_map_2(j)=inode_abaqus
+                    
+                    inode_abaqus=inode_abaqus+1
+                 end if
+              end if
+           end do node_loop
+           
         end if
-      end do node_loop
-
-    end if
-  end do
+     end do
 
   else
 
-  inode_abaqus=1
-  do i=1,ubound(model_nset_name,1)
-    if (model_nset_mask(i) .eqv. .true.) then
-
-      node_loop_2: do j=1,ubound(model_node_name,1)
-        if (trim(model_node_instance(j)) == trim(model_nset_instance(i))) then
-          if (model_node_number(j) == model_nset_node(i)) then
-            
-            abaqus_xyz(inode_abaqus,1:3)       = model_node_xyz(j,1:3)
-            abaqus_node_name(inode_abaqus)     = model_node_name(j)
-            abaqus_nset(inode_abaqus)          = trim(model_nset_instance(i)) // '.' // trim(model_nset_name(i))
-
-            inode_abaqus=inode_abaqus+1
-          end if
+     inode_abaqus=1
+     do i=1,ubound(model_nset_name,1)
+        if (model_nset_mask(i) .eqv. .true.) then
+           
+           node_loop_2: do j=1,ubound(model_node_name,1)
+              if (trim(model_node_instance(j)) == trim(model_nset_instance(i))) then
+                 if (model_node_number(j) == model_nset_node(i)) then
+                    
+                    abaqus_xyz(inode_abaqus,1:3)       = model_node_xyz(j,1:3)
+                    abaqus_node_name(inode_abaqus)     = model_node_name(j)
+                    abaqus_nset(inode_abaqus)          = trim(model_nset_instance(i)) // '.' // trim(model_nset_name(i))
+                    
+                    inode_abaqus=inode_abaqus+1
+                 end if
+              end if
+           end do node_loop_2
+           
         end if
-      end do node_loop_2
-
-    end if
-  end do
+     end do
 
   end if
 
@@ -3654,6 +3647,9 @@ subroutine filter_abaqus_data()
     return
   end if
 
+  allocate(abaqus_face_type(ubound(model_face_type,1)),stat=ios);   call error_allocate(ios)
+  allocate(abaqus_face_node(ubound(model_face_node,1),4),stat=ios); call error_allocate(ios)
+  abaqus_face_type=model_face_type; abaqus_face_node=0
   do i=1,ubound(abaqus_face_type,1)
     select case (abaqus_face_type(i))
     case (3)
@@ -3737,7 +3733,8 @@ contains
 
     stmp=trim(adjustl(strin))
     
-    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+!Timo:    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+    found=compstr_initial(stmp,paramstr)
     if (found .eqv. .true.) then
       stmp=adjustl(stmp(len_trim(paramstr)+1:len_trim(stmp)))
       if (stmp(1:1) == '=') then
@@ -3824,7 +3821,8 @@ contains
 
     stmp=trim(adjustl(strin))
     
-    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+!Timo:    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+    found=compstr_initial(stmp,paramstr)
     if (found .eqv. .true.) then
       stmp=adjustl(stmp(len_trim(paramstr)+1:len_trim(stmp)))
       if (stmp(1:1) == '=') then
@@ -3884,7 +3882,8 @@ contains
 
     stmp=trim(adjustl(strin))
     
-    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+!Timo:    found=compstr_initial(stmp(1:len_trim(paramstr)),paramstr)
+    found=compstr_initial(stmp,paramstr)
     if (found .eqv. .true.) then
       stmp=adjustl(stmp(len_trim(paramstr)+1:len_trim(stmp)))
       if (stmp(1:1) == '=') then
@@ -3989,7 +3988,6 @@ function number_integer_cols(input_line) result(ncols)
   implicit none
 
   integer :: i,j,n,ios,ncols
-  character(len=chr80) :: string,paramstr
   character(len=input_line_length) :: input_line,stmp
   
   stmp=''; i=1; ncols=0
