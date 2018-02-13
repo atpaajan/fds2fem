@@ -41,6 +41,27 @@ function str2int(s) result(i)
 
 end function str2int
 
+function str2float(s) result(x) 
+!-------------------------------------------
+! Convert a character string into an integer
+! - Add exception handling
+!-------------------------------------------
+  use global_constants
+  implicit none
+
+  integer :: ios
+  real(kind=rk) :: x
+  character(len=chr80) :: s
+
+  read(s,*,iostat=ios) x 
+  if (ios /= 0) then
+    write(*,'(3(a))') 'ERROR: in converting character string ', &
+      trim(quote(s)), ' to a floating point number'
+    stop
+  end if
+
+end function str2float
+
 function quote(strin) result(strout)
 !----------------------------------------
 ! Add single quotes to a character string

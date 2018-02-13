@@ -60,7 +60,10 @@ module global_variables
   character(len=chr80) :: dump_fds_nodes
   character(len=chr80) :: dump_fds_data
   character(len=chr80) :: dump_fds_model
-  
+
+  character(len=chr80) :: dump_cfast_nodes
+  character(len=chr80) :: dump_cfast_data
+
   character(len=chr80) :: dump_fem_nodes
   character(len=chr80) :: dump_fem_data
   character(len=chr80) :: dump_fem_model
@@ -69,6 +72,8 @@ module global_variables
 
   logical :: nset_connectivity
   logical :: read_all_fds_data
+
+  logical :: iso_curve, cfast_input
 
   ! Mapping
   integer       :: mp_n
@@ -102,6 +107,9 @@ module global_variables
   logical :: fds_xyz_available
   logical :: fds_data_available
   logical :: fds_model_available
+
+  logical :: cfast_xyz_available
+  logical :: cfast_data_available
   
   logical :: fem_xyz_available
   logical :: fem_data_available
@@ -123,6 +131,9 @@ module global_variables
 
   real(kind=rk) :: hcoeff
   real(kind=rk) :: emissivity
+
+  integer :: iso_ntimes
+  real(kind=rk) :: iso_tbegin, iso_tend
 
 end module global_variables
 
@@ -306,6 +317,8 @@ module mapping_arrays
   integer, dimension(:,:), allocatable :: ansys_element_node
 
   integer, dimension(:,:), allocatable :: connectivity_table_num
+  real(kind=rk), dimension(:,:), allocatable :: connectivity_phys_cons
+  logical, dimension(:), allocatable :: time_shift_mask
   
   integer, dimension(:,:), allocatable :: abaqus_element_node
 
@@ -342,6 +355,8 @@ module mapping_arrays
   
   real(kind=rk), dimension(:), allocatable :: abaqus_time
   real(kind=rk), dimension(:), allocatable :: abaqus_node_area
+  real(kind=rk), dimension(:), allocatable :: abaqus_node_hcoeff
+  real(kind=rk), dimension(:), allocatable :: abaqus_node_emissivity
 
   real(kind=rk), dimension(:,:), allocatable :: ansys_xyz
 
@@ -561,3 +576,17 @@ module abaqus_arrays
   integer, dimension(:,:), allocatable :: assembly_lines
   
 end module abaqus_arrays
+
+Module cfast_arrays
+!---------------------
+! CFAST-related arrays
+!---------------------
+  Use global_constants
+  Implicit none
+
+  Real(kind=rk), Dimension(:,:), Allocatable :: cfast_target_xyz, cfast_comp_xyz, cfast_target_ior
+  Real(kind=rk), Dimension(:), Allocatable :: cfast_matl_epsilon, cfast_target_epsilon
+  Character(len=chr20), Dimension(:), Allocatable :: cfast_target_name, cfast_target_matl, cfast_matl_name
+  Integer, Dimension(:), Allocatable :: cfast_target_comp
+
+End Module cfast_arrays

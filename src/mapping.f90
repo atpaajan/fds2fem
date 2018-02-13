@@ -17,7 +17,7 @@ subroutine mapping_module()
   implicit none
 
   integer :: i,j,k,ios
-  integer :: i_sub,nnodes_fds_sub,nnodes_fem_sub
+  integer :: nnodes_fds_sub,nnodes_fem_sub
 
   write(*,'(a)') ''
   write(*,'(a)') 'Mesh mapping module'
@@ -32,7 +32,7 @@ subroutine mapping_module()
     return
   end if
 
-  if (.not. fds_xyz_available) then
+  if (.not. fds_xyz_available .And. .Not. cfast_input) then
     write(*,'(t3,a)') 'WARNING: FDS node coordinates unavailable'
     fem_data_available=.false.
     return
@@ -49,6 +49,16 @@ subroutine mapping_module()
     fem_data_available=.false.
     return
   end if
+
+  If (cfast_input .And. .Not. Trim(mapping_method) == 'devc_to_nset') Then
+    Write(*,'(a,a)') 'ERROR: CFAST input and mapping method: ',Trim(mapping_method)
+    Stop
+  End If
+
+  If (cfast_input .And. .Not. nset_connectivity) Then
+    Write(*,'(a)') 'ERROR: CFAST input and no nset_connectivity '
+    Stop
+  End If
 
   !--------
   ! Mapping
@@ -67,6 +77,11 @@ subroutine mapping_module()
 
   allocate(fds_mask(nnodes_fds),stat=ios); call error_allocate(ios)
   allocate(fem_mask(nnodes_fem),stat=ios); call error_allocate(ios)
+
+  allocate(abaqus_node_emissivity(nnodes_fem),stat=ios); call error_allocate(ios)
+  allocate(abaqus_node_hcoeff(nnodes_fem),stat=ios); call error_allocate(ios)
+  abaqus_node_emissivity= emissivity
+  abaqus_node_hcoeff=     hcoeff
 
   if (.not. nset_connectivity) then
     !----------------------------------------------------------
@@ -230,19 +245,16 @@ subroutine map_nearest()
 
   logical, save :: first_call=.true.
 
-  integer :: i,j,k,ios,imindist,i_patch
+  integer :: i,j,k,ios,imindist
   integer :: nn_r_cut,nn_dr_cut,count_new,nn_n, nn_nmx
   integer, dimension(:,:), allocatable :: neighbor
   
   logical, dimension(:), allocatable :: dmask
-  logical, dimension(:), allocatable :: nset_mask
-  logical, dimension(:), allocatable :: patch_mask
   
   real(kind=rk) :: dx,dy,dz,mindist,w_sum,r_now,weight
   real(kind=rk) :: r_nn,r_sq,r_cut,r_cut_sq,dr_cut_sq
   real(kind=rk), dimension(:), allocatable :: distance
   
-  character(len=chr80), dimension(:), allocatable :: nset_ctmp
   real(kind=rk), dimension(:,:), allocatable :: weight_neighbor
 
   !---------------
@@ -463,61 +475,77 @@ subroutine map_nearest()
 end subroutine map_nearest
 
 subroutine map_devc_to_nset()
-!---------------------------
-! Device to node set mapping
-!---------------------------
+!----------------------------------
+! FDS:   Device to node set mapping
+! CFAST: Target to node set mapping
+!----------------------------------
   use error_messages
   use global_constants
   use global_variables
   use mapping_arrays
   use string_handling
+  Use cfast_arrays
   implicit none
  
-  integer :: i,j,k,l,m,ios
+  integer :: i,j,k,l,m
+  Real(kind=rk) :: cfast_eps
   character(len=chr80) :: nset_name
 
-  write(*,'(t3,3(a))') 'Direct DEVC-NSET mapping'
+  If (cfast_input) Then
+     write(*,'(t3,3(a))') 'Direct Target-NSET mapping'
+  Else
+     write(*,'(t3,3(a))') 'Direct DEVC-NSET mapping'
+  End If
 
-  if (trim(fds_output) /= 'devc') then
+  If (Trim(fds_output) /= 'devc' .And. .Not. cfast_input) Then
     write(*,'(a)') 'ERROR: DEVC output expected'
     stop
   end if
 
   if (.not. nset_connectivity) then
-    write(*,'(a)') 'ERROR: no NSET-DEVC connectivity given'
-    stop
+     If (cfast_input) Then
+        write(*,'(a)') 'ERROR: no NSET-Target connectivity given'
+     Else
+        write(*,'(a)') 'ERROR: no NSET-DEVC connectivity given'
+     End If
+     Stop
   end if
 
-  !----------------------------------
-  ! Assign DEVC averages to node sets
-  !----------------------------------
+  !-----------------------------------------
+  ! Assign DEVC/Target averages to node sets
+  !-----------------------------------------
 
-  fem_data=0.0
-  i_loop: do i=1,ubound(connectivity_table,1)
-    nset_name=connectivity_table(i,1)
+  fem_data = 0.0
+  i_loop: Do i = 1, Ubound(connectivity_table,1)
+     nset_name = Trim(connectivity_table(i,1))
 
-    j_loop: do j=1,nnodes_fem
-      if (trim(fem_nset(j)) == trim(nset_name)) then
+     j_loop: Do j = 1, nnodes_fem
+        If (Trim(fem_nset(j)) == Trim(nset_name)) Then
+           
+           m = 0
+           cfast_eps = 0.0
+           k_loop: Do k = 1, nnodes_fds
+
+              l_loop: Do l = 2, Ubound(connectivity_table,2)
+                 If (fds_idevc(k) == connectivity_table_num(i,l)) Then
+                    fem_data(1:ntimes_fem,j) = fem_data(1:ntimes_fem,j) + fds_data(1:ntimes_fds,k)
+                    cfast_eps = cfast_eps + cfast_target_epsilon(k)
+                    m = m + 1
+                 End If
+              End Do l_loop
+              
+           End Do k_loop
+
+           if (m /= 0) then
+              fem_data(1:ntimes_fem,j) = fem_data(1:ntimes_fem,j)/m
+              If (Trim(fem_mode)=='abaqus' .And. cfast_input) Then
+                 abaqus_node_emissivity(j) = cfast_eps/m
+              End If
+           end if
         
-        m=0
-        k_loop: do k=1,nnodes_fds
-
-          l_loop: do l=2,ubound(connectivity_table,2)
-            if (fds_idevc(k) == connectivity_table_num(i,l)) then
-              fem_data(1:ntimes_fem,j)=fem_data(1:ntimes_fem,j)+fds_data(1:ntimes_fds,k)
-              m=m+1
-            end if
-          end do l_loop
-
-        end do k_loop
-
-        if (m /= 0) then
-          fem_data(1:ntimes_fem,j)=fem_data(1:ntimes_fem,j)/m
         end if
-        
-      end if
 
-    end do j_loop
+     end do j_loop
 
   end do i_loop
 

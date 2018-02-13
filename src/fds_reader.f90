@@ -183,7 +183,7 @@ subroutine parse_fds_bndf_namelist()
   use string_handling
   implicit none
   
-  integer :: i,j,k,ios,nbndf
+  integer :: i,ios,nbndf
 
   ! BNDF-namelist group
   namelist /bndf/ cell_centered,fyi,part_id,prop_id,quantity,recount_drip,spec_id
@@ -256,7 +256,7 @@ subroutine parse_fds_devc_namelist()
   use string_handling
   implicit none
 
-  integer :: i,j,k,ios,ndevc
+  integer :: i,j,ios,ndevc
   logical :: xyz_given,xb_given,identical
 
   ! DEVC-namelist group
@@ -461,7 +461,7 @@ subroutine parse_fds_dump_namelist()
   use string_handling
   implicit none
 
-  integer :: i,j,ios,ndump
+  integer :: ios,ndump
 
   namelist /dump/ column_dump_limit,ctrl_column_limit,cutcell_data_file,&
                   debug,devc_column_limit,dt_bnde,dt_bndf,dt_ctrl,dt_devc,dt_devc_line,dt_flush,&
@@ -591,7 +591,7 @@ subroutine parse_fds_mesh_namelist
   namelist /mesh/ color,cylindrical,evacuation,evac_humans,&
                   evac_z_offset,fyi,id,ijk,level,mpi_process,&
                   mult_id,rgb,synchronize,xb
-  integer :: level,mpi_process,nm,current_mpi_process
+  integer :: level,mpi_process
   integer, dimension(3) :: ijk,rgb
   logical :: cylindrical,evacuation,evac_humans,synchronize
   character(len=chr25) :: color
@@ -683,7 +683,7 @@ subroutine parse_fds_obst_namelist()
   use string_handling
   implicit none
 
-  integer :: i,j,ios,nobst
+  integer :: i,ios,nobst
   
   ! MESH-namelist group
   namelist /obst/ allow_vent,bndf_face,bndf_obst,bulk_density,color,ctrl_id,devc_id,&
@@ -1097,7 +1097,7 @@ function find_single_devc_file(chid,n) result(filename)
 
   integer :: n
   logical :: file_exists
-  character(len=chr40) :: chid,cn
+  character(len=chr40) :: chid
   character(len=chr80) :: filename
 
   if (n <= 0) then
@@ -1171,6 +1171,10 @@ function number_csv_cols(filename) result(cols)
 
   cols=0
   read(iochannel(1),'(a)') input_line
+  If (len_trim(input_line) > input_line_length - 1) Then
+     Write(*,fmt='(a,a)')'ERROR: Too long line(s) in file ',Trim(filename)
+     Stop
+  End If
   do i=1,len_trim(input_line)
     read(input_line(i:i),'(a)',iostat=ios) ctmp
     if (ios /= 0) call error_read_file(filename)
@@ -1206,7 +1210,6 @@ subroutine import_devc_data()
   integer :: i,j,k,ios,column,ndevc,ndevc_files,ibegin,iend
 
   character :: ctmp
-  character(len=chr80) :: fds_quantity
   character(len=input_line_length) :: input_line
 
   character(len=chr20), dimension(:), allocatable :: devc_name_tmp
@@ -1333,7 +1336,6 @@ subroutine filter_devc_data
   implicit none
 
   integer :: i,j,ios,idevc,ndevc,inode,nrows,ncols
-  integer :: idevc_qnty,idevc_user,idevc_both
   integer :: ndevc_qnty,ndevc_user,ndevc_both
 
   integer :: devc_number
@@ -1585,8 +1587,8 @@ subroutine locate_bndf_files()
   use string_handling
   implicit none
 
-  integer :: i,n,ios,nbndf,nmesh,nbndf_files
-  integer :: ibndf,ibndf_file,imesh
+  integer :: ios,nbndf,nmesh
+  integer :: ibndf,imesh
   character(len=chr80) :: filename
   logical :: file_exists
  
@@ -1666,8 +1668,8 @@ function bndf_patches(ibndf,imesh) result(npatch)
   use global_constants
   implicit none
 
-  integer :: i,i1,i2,j1,j2,k1,k2,ios
-  integer :: ibndf,imesh,npatch,nnode
+  integer :: ios
+  integer :: ibndf,imesh,npatch
   character(len=chr30) :: quantity,short_name,units
 
   open(unit=iochannel(1),file=trim(fds_bndf_file(ibndf,imesh)), &
@@ -1905,8 +1907,8 @@ subroutine import_bndf_geom()
   use global_variables
   implicit none
 
-  integer :: i,j,k,l,m,i1,i2,j1,j2,k1,k2,l1,l2,ios,nior
-  integer :: di,dj,dk,dl,ibndf,jbndf,imesh,ipatch
+  integer :: i,j,k,l,m,i1,i2,j1,j2,k1,k2,ios,nior
+  integer :: ibndf,jbndf,imesh,ipatch
   integer :: nmesh,npatch,nnode,nelement,nb,nm
 
   character(len=chr30) :: quantity,short_name,units
@@ -2208,12 +2210,11 @@ subroutine import_bndf_data()
   use global_variables
   implicit none
 
-  integer :: i,j,k,l,i1,i2,j1,j2,k1,k2,ios,nior
-  integer :: ibndf,jbndf,imesh,ipatch,itime,n1,n2,c,c1,c2
-  integer :: nmesh,npatch,nnode,nb,nm,inode
+  integer :: i,i1,i2,j1,j2,k1,k2,ios,nior
+  integer :: ibndf,jbndf,imesh,ipatch,itime,c,c1,c2
+  integer :: nmesh,npatch,nb,nm
 
   character(len=chr30) :: quantity,short_name,units
-  real(kind=fb) :: rtmp
 
   !-------------------------
   ! Chosen transfer quantity
@@ -2327,9 +2328,8 @@ subroutine filter_bndf_data
   use string_handling
   implicit none
 
-  integer :: i,j,ios,i_node,i_node_fds,i_patch,itime
-  integer :: nrows,ncols,nnodes_hcoeff_fds
-  character(len=chr80) :: fmt_1
+  integer :: i,j,ios,i_node,i_node_fds
+  integer :: nrows,ncols
   logical :: compatible
 
   ! Relevant arrays

@@ -40,12 +40,12 @@ function rotate_arbitrary_axis(p1,p2,theta) result(ra)
   implicit none
 
   real(kind=rk) :: theta,rtmp,st,ct
-  real(kind=rk), dimension(3) :: p,p1,p2,r
+  real(kind=rk), dimension(3) :: p1,p2,r
 
   real(kind=rk), dimension(4,4) :: t,t_inv
   real(kind=rk), dimension(4,4) :: rx,rx_inv
   real(kind=rk), dimension(4,4) :: ry,ry_inv
-  real(kind=rk), dimension(4,4) :: rz,rz_inv
+  real(kind=rk), dimension(4,4) :: rz
   
   real(kind=rk), dimension(4,4) :: ra
 
@@ -60,8 +60,14 @@ function rotate_arbitrary_axis(p1,p2,theta) result(ra)
   t_inv(4,1)=0.0; t_inv(4,2)=0.0; t_inv(4,3)=0.0; t_inv(4,4)=1.0
   
   r(1)=p2(1)-p1(1); r(2)=p2(2)-p1(2); r(3)=p2(3)-p1(3) 
-  r=r/(sqrt(r(1)**2+r(2)**2+r(3)**2))
   rtmp=sqrt(r(2)*r(2)+r(3)*r(3))
+  If (sqrt(r(1)**2+r(2)**2+r(3)**2) > eps) Then
+     r = r/(sqrt(r(1)**2+r(2)**2+r(3)**2))
+  Else
+     r = 0.0
+  End If
+  !Timo:!$  r=r/(sqrt(r(1)**2+r(2)**2+r(3)**2))
+!Timo:!$  rtmp=sqrt(r(2)*r(2)+r(3)*r(3))
  
   if (rtmp > eps) then
     rx(1,1)=1.0; rx(1,2)=0.0;       rx(1,3)=0.0;        rx(1,4)=0.0

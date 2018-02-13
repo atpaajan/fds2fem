@@ -129,9 +129,9 @@ subroutine deallocate_excess_fds_arrays()
   ! DEVC-related arrays
   !--------------------
 
-  if (allocated(fds_devc_ior)) then
-    deallocate(fds_devc_ior,stat=ios); call error_allocate(ios)
-  end if
+  !if (allocated(fds_devc_ior)) then
+  !  deallocate(fds_devc_ior,stat=ios); call error_allocate(ios)
+  !end if
 
   if (allocated(fds_devc_rows)) then
     deallocate(fds_devc_rows,stat=ios); call error_allocate(ios)
@@ -145,9 +145,9 @@ subroutine deallocate_excess_fds_arrays()
     deallocate(fds_devc_file,stat=ios); call error_allocate(ios)
   end if
 
-  if (allocated(fds_devc_name)) then
-    deallocate(fds_devc_name,stat=ios); call error_allocate(ios)
-  end if
+  !if (allocated(fds_devc_name)) then
+  !  deallocate(fds_devc_name,stat=ios); call error_allocate(ios)
+  !end if
 
   if (allocated(fds_devc_name_b)) then
     deallocate(fds_devc_name_b,stat=ios); call error_allocate(ios)
@@ -161,9 +161,9 @@ subroutine deallocate_excess_fds_arrays()
     deallocate(fds_devc_unit,stat=ios); call error_allocate(ios)
   end if
 
-  if (allocated(fds_devc_time)) then
-    deallocate(fds_devc_time,stat=ios); call error_allocate(ios)
-  end if
+  !if (allocated(fds_devc_time)) then
+  !  deallocate(fds_devc_time,stat=ios); call error_allocate(ios)
+  !end if
 
   if (allocated(fds_devc_xyz)) then
     deallocate(fds_devc_xyz,stat=ios); call error_allocate(ios)
@@ -173,9 +173,9 @@ subroutine deallocate_excess_fds_arrays()
     deallocate(fds_devc_xb,stat=ios); call error_allocate(ios)
   end if
 
-  if (allocated(fds_devc_data)) then
-    deallocate(fds_devc_data,stat=ios); call error_allocate(ios)
-  end if
+  !if (allocated(fds_devc_data)) then
+  !  deallocate(fds_devc_data,stat=ios); call error_allocate(ios)
+  !end if
 
   !--------------------
   ! MESH-related arrays
