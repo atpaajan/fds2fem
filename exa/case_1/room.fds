@@ -1,0 +1,74 @@
+EU-Fire-Resist project, fds2fem mapping tool between FDS and ABAQUS
+A simple long room (like a train car) that has three doors at different
+positions. FDS output information on all door, but the FEM model is
+just containing one door. Same FEM model could be used for three different
+heat loads.
+
+This FDS file produces outputs both for wall (surface) temperature and
+adiabatic surface temperature. Both BNDF and DEVC outputs are produced.
+This means that just one FDS calculation is needed for all different
+fds2fem options (transfered quantity, bndf/devc data).
+
+ Fire Dynamics Simulator
+ Revision         : FDS6.6.0-1036-g570108c
+ Revision Date    : Mon Feb 12 17:57:29 2018 -0500
+ 
+&HEAD CHID='room',TITLE='Example case for FDS2FEM' /
+
+&MESH IJK=50,15,15,XB=-5.0,5.0,-1.5,1.5,0.0,3.0 /
+&TIME T_END=100.0 /
+
+&DUMP DT_BNDF=5.0,DT_DEVC=5.0 /
+Setting the implicit boundary file output for all surfaces off.
+Just those surfaces that the user wants to import to a FEM code
+should be used to generate the BNDF output.
+&MISC TMPA=20.0,BNDF_DEFAULT=.FALSE. /
+
+!---------------
+! Model geometry
+!---------------
+
+The BNDF output is defined for those surfaces that are wanted to be
+imported in the FEM code. The FDS "patch" number is the ordinal number
+of the lines that produce the BNDF output. E.g., the second patch is
+the second OBSt line below: the door at x=5 end of the car and the
+data is saved from the door face that is facing inside the car (ior=-1).
+&OBST XB=-5.0,-5.0,-0.5, 0.5,0.0,2.0,SURF_ID='STEEL_DOOR',BNDF_FACE(1)=.TRUE. /
+&OBST XB= 5.0, 5.0,-0.5, 0.5,0.0,2.0,SURF_ID='STEEL_DOOR',BNDF_FACE(-1)=.TRUE. /
+&OBST XB=-0.5, 0.5,-1.5,-1.5,0.0,2.0,SURF_ID='STEEL_DOOR',BNDF_FACE(2)=.TRUE. /
+
+&OBST XB=-2.5,-1.5,-0.5,0.5,0.0,0.0,SURF_ID='HOT' /
+
+&SURF ID='STEEL_DOOR'
+      MATL_ID='STEEL'
+      COLOR='STEEL BLUE'
+      THICKNESS=0.02
+      TMP_INNER=20.0 /
+
+&MATL ID='STEEL'
+      DENSITY=7850.0
+      EMISSIVITY=0.9
+      CONDUCTIVITY=16.0
+      SPECIFIC_HEAT=0.5 /
+
+&SURF ID='HOT'
+      TMP_FRONT=3000.0
+      COLOR='RASPBERRY' /
+
+!-------------
+! Measurements
+!-------------
+
+For now, fds2fem can use wall temperature or adiabatic surface temperature.
+One can define many output quantities, the configuration file of fds2fem is
+used to choose the quantity that will be used in the mapping.
+&BNDF QUANTITY='WALL TEMPERATURE' /
+&BNDF QUANTITY='ADIABATIC SURFACE TEMPERATURE'/
+
+Device data is also added so the DEVC output could also be used
+to map FDS data to FEM input.
+&DEVC XB=-5.0,-5.0,-0.5, 0.5,0.0,2.0,QUANTITY='WALL TEMPERATURE',IOR=-1,ID='TD-1',STATISTICS='MEAN' /
+&DEVC XB= 5.0, 5.0,-0.5, 0.5,0.0,2.0,QUANTITY='WALL TEMPERATURE',IOR=-1,ID='TD-2',STATISTICS='MEAN' /
+&DEVC XB=-0.5, 0.5,-1.5,-1.5,0.0,2.0,QUANTITY='WALL TEMPERATURE',IOR=+2,ID='TD-3',STATISTICS='MEAN' /
+
+&TAIL /

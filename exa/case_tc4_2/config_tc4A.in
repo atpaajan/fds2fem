@@ -1,0 +1,53 @@
+#------------------------------------
+# fds2abqs: Sample configuration file
+#------------------------------------
+#
+# This uses BNDF wall temperature output of FDS. 
+# FDS and ABAQUS geometries are matching, translation and
+# rotation is not needed.
+# Each FDS patch (bndf surface) is matched to the corresponding
+# ABAQUS nset using the connectivity file nset_bndfA.in
+
+# Basic settings
+
+fds_input  fds_tc4_2.fds
+fem_input  TC4_m1A.inp
+fem_mode   abaqus
+fds_output bndf
+
+# Transfer quantity
+quantity   wall_temperature
+
+# NSET-DEVC/BNDF connectivity
+# The connectivity file should usually be given. Without a
+# Abaqus nset list, the FDS data is mapped to all Abaqus
+# nsets and this is usually not wanted.
+# The Abaqus node set has nodes at both the outside and 
+# the inside of the hollow column, so the user should give
+# the correct nset and connect it to all FDS patches.
+# FDS patch 1 is the y=-1.5 face (ior=-2 for bndf_face(ior))
+# FDS patch 2 is the x=-1.5 face (ior=-1 for bndf_face(ior))
+# FDS patch 3 is the x=+1.5 face (ior=+1 for bndf_face(ior))
+# FDS patch 4 is the y=+1.5 face (ior=+2 for bndf_face(ior))
+nset_input nset_bndfA.in
+
+# Node set analysis
+fds_statistics on
+fem_statistics on
+
+# Dump configuration
+dump_fds_nodes vtk
+dump_fds_data  vtk
+dump_fem_nodes vtk
+dump_fem_data  vtk
+
+# Model matching
+match_translate off
+match_rotate    off
+
+# Mesh mapping
+mapping nearest
+
+mp_n    1
+mp_nmx  8
+mp_deg  2.0

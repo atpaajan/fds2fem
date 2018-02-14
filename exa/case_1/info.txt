@@ -1,0 +1,16 @@
+Example case 1
+--------------
+
+1) Run the FDS simulation
+
+   $ fds_mpi_intel_linux_64 room.fds
+
+2) Run FDS2FEM using either of the config files
+
+   $ fds2fem config_bndf.in
+
+   or
+
+   $ fds2fem config_devc.in
+
+3) Run the ABAQUS simulation

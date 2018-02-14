@@ -1,0 +1,51 @@
+#-----------------------------------
+# fds2fem: Sample configuration file
+#-----------------------------------
+#
+# This uses pre-defined time-temperature curves:
+#      iso_834:    ISO 834 curve, "standard curve"
+#      ec1-1-2_hc: EC1-1-2 cl3.2.3 Hydrocarbon curve
+#      ec1-1-2_ex: EC1-1-2 cl3.2.2 External fire curve
+#      astm_e119:  ASTM E 119 curve ("US standard curve")
+#
+# ABAQUS nsets connected to CFAST targets using the nset connectivity file
+#
+# Example 1 case
+# Room dimensions: x: -5.0,5.0
+#                  y: -1.5,1.5
+#                  z:  0.0,3.0 
+# Target doors: -5.0,-5.0,-0.5, 0.5,0.0,2.0
+# (FDS model)    5.0, 5.0,-0.5, 0.5,0.0,2.0
+#               -0.5, 0.5,-1.5,-1.5,0.0,2.0
+
+# Basic settings
+fem_input    door.inp
+fem_mode     abaqus
+iso_curve  on
+
+# Time-temperature curves fitted to nsets:
+#   iso_ntimes: number of time points (default 361)
+#   iso_tbegin: start time (default 0.0 s)
+#   iso_tend:   end time (default 3600.0 s)
+#   => default time points: 0, 10, 20,...,3600 s
+iso_ntimes   361
+iso_tbegin   0.0
+iso_tend   3600.0
+
+# emissivity and heat transfer coefficient are needed, if T_ast transfered
+# iso mode: use these (or defaults) if not given in the nset_input file.
+e_coeff  0.9
+h_coeff 25.0
+
+# Give the transfered quantity: wall_temperature or adiabatic_surface_temperature
+quantity  adiabatic_surface_temperature
+
+# NSET-DEVC connectivity file
+nset_input nset_devc.in
+
+# Node set analysis
+fem_statistics off
+
+# Dump configuration: off or xyz/sfd or vtk
+dump_fem_nodes vtk
+dump_fem_data  vtk

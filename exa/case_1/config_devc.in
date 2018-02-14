@@ -1,0 +1,43 @@
+#------------------------------------
+# fds2abqs: Sample configuration file
+#------------------------------------
+
+# Basic settings
+fds_input  room.fds
+fem_input  door.inp
+fem_mode   abaqus
+fds_output devc
+
+# emissivity and heat transfer coefficient are needed, if T_ast transfered
+e_coeff  0.9
+h_coeff 25.0
+
+# Give the transfered quantity
+quantity   wall_temperature
+
+# NSET-DEVC/BNDF connectivity
+nset_input nset_devc.in
+
+# Node set analysis
+fds_statistics off
+fem_statistics off
+
+# Dump configuration: off or xyz/sfd or vtk
+dump_fds_nodes  off
+dump_fds_data   off
+dump_fem_nodes off
+dump_fem_data  off
+
+# Model matching
+match_translate off
+match_rotate    off
+
+origin_fds   0.0 0.0 0.0
+origin_fem   0.0 0.0 0.0
+
+euler_alpha  0.0
+euler_beta   0.0
+euler_gamma  0.0
+
+# Mesh mapping
+mapping devc_to_nset

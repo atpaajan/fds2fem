@@ -1,0 +1,17 @@
+Example case tc1
+----------------
+
+1) Run the FDS simulation
+
+   $ fds_mpi_intel_linux_64 fds_tc1_1.fds
+
+2) Run FDS2FEM using either of the config files
+
+   $ fds2fem config_tc1A.in
+
+   or
+
+   $ fds2fem config_tc1B.in
+
+
+3) Run the ABAQUS simulation

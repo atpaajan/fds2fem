@@ -3512,13 +3512,15 @@ subroutine filter_abaqus_data()
     nnodes_abaqus=ubound(model_node_xyz,1)
     ntimes_abaqus=ntimes_fds
 
-    allocate(abaqus_xyz(nnodes_abaqus,3),stat=ios);     call error_allocate(ios)
-    allocate(abaqus_node_name(nnodes_abaqus),stat=ios); call error_allocate(ios)
-    allocate(abaqus_nset(nnodes_abaqus),stat=ios);      call error_allocate(ios)
+    allocate(abaqus_xyz(nnodes_abaqus,3),stat=ios);       call error_allocate(ios)
+    allocate(abaqus_node_name(nnodes_abaqus),stat=ios);   call error_allocate(ios)
+    allocate(abaqus_nset(nnodes_abaqus),stat=ios);        call error_allocate(ios)
+    allocate(abaqus_node_number(nnodes_abaqus),stat=ios); call error_allocate(ios)
 
     abaqus_xyz        = model_node_xyz
     abaqus_node_name  = model_node_name
     abaqus_nset       = ''
+    abaqus_node_number = 0
 
     return
   end if
@@ -3587,6 +3589,7 @@ subroutine filter_abaqus_data()
   abaqus_node_name = ''
   abaqus_nset      = ''
   abaqus_node_area = 0.0
+  abaqus_node_number = 0
 
   if (trim(transfer_quantity) == 'adiabatic_surface_temperature' .or. &
     trim(transfer_quantity) == 'net heat flux') then

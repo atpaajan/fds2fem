@@ -1,0 +1,65 @@
+#------------------------------------
+# fds2abqs: Sample configuration file
+#------------------------------------
+# This uses BNDF wall temperature output of FDS. FDS and ABAQUS 
+# geometries are not matching, so translation and/or rotation are
+# needed. These are done using the "automatic" option of fds2fem.
+# Abaqus model contains just one door and just one face is picked
+# there, so the automatic routine should be able to match the doors,
+# because a common z-axis is assumed. NOTE: The automatic translation
+# might give a rotation that is not unique so the matching could
+# be "180 degrees off" for a symmetrical object. If this is the case,
+# use the manual mapping instead.
+#
+# Each FDS patch (bndf surface) is matched to the corresponding
+# ABAQUS nset using the connectivity file nset_bndfA.in
+# Now the Abaqus model has just one door, so only one line is
+# needed in the connectivity file.
+
+# Basic settings
+
+fds_input  room.fds
+fem_input  door.inp
+fem_mode   abaqus
+fds_output devc
+
+# emissivity and heat transfer coefficient are needed, if T_ast transfered
+e_coeff  0.9
+h_coeff 25.0
+
+# Give the transfered quantity
+quantity   wall_temperature
+
+# NSET-DEVC/BNDF connectivity
+#
+# The connectivity file should usually be given. Without a
+# Abaqus nset list, the FDS data is mapped to all Abaqus
+# nsets and this is usually not wanted.
+#
+# FDS patches:
+#   1: x=-5.0 door, ior=+1 face (fasing inside the car)
+#   2: x=+5.0 door, ior=-1 face (fasing inside the car)
+#   3: y=-1.5 door, ior=+2 face (fasing inside the car) This is now used
+nset_input nset_bndf.in
+
+# Node set analysis
+
+fds_statistics on
+fem_statistics on
+
+# Dump configuration: off or xyz/sfd or vtk
+dump_fds_nodes vtk
+dump_fds_data  vtk
+dump_fem_nodes vtk
+dump_fem_data  vtk
+
+# Model matching
+match_translate automatic
+match_rotate    automatic
+
+# Mesh mapping
+mapping nearest
+
+mp_n    4
+mp_nmx  12
+mp_deg  2.0

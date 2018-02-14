@@ -1,0 +1,108 @@
+EU-Fire-Resist project, fds2fem mapping tool between FDS and ABAQUS
+A square holow section steel column, 0.3m x 0.3m x 3.0m heated with
+two 500 C hot surfaces.
+
+This FDS file produces outputs both for wall (surface) temperature and
+adiabatic surface temperature. Both BNDF and DEVC outputs are produced.
+This means that just one FDS calculation is needed for all different
+fds2fem options (transfered quantity, bndf/devc data).
+
+ Fire Dynamics Simulator
+ Revision         : FDS6.6.0-1036-g570108c
+ Revision Date    : Mon Feb 12 17:57:29 2018 -0500
+
+&HEAD CHID='fds_tc4_2', TITLE='Column - heat source' /
+&MESH XB=-0.3,1.7,-1.0,1.0,0.0,3.0, IJK=40,40,60 /
+&TIME T_END=600.0 /
+&DUMP NFRAMES=100, DT_BNDF=10. /
+/setting the implicit boundary file output for all surfaces off.
+/just those surfaces that the user wants to import to a FEM code
+/should be used to generate the BNDF output.
+&MISC BNDF_DEFAULT=.FALSE. /
+
+/boundary conditions
+&VENT MB='XMIN', SURF_ID='OPEN' /
+&VENT MB='YMAX', SURF_ID='OPEN' /
+&VENT MB='YMIN', SURF_ID='OPEN' /
+
+/Creating a column
+/the BNDF output is defined for those surfaces that are wanted to be
+/imported in the FEM code. The FDS "patch" number is the ordinal number
+/of the lines that produce the BNDF output. Next line produces four
+/fds patches (bndf_face(0) has no meaning).
+/    patch 1 is the y=-1.5 face (ior=-2 for bndf_face(ior))
+/    patch 2 is the x=-1.5 face (ior=-1 for bndf_face(ior))
+/    patch 3 is the x=+1.5 face (ior=+1 for bndf_face(ior))
+/    patch 4 is the y=+1.5 face (ior=+2 for bndf_face(ior))
+&OBST XB=-0.15,0.15,-0.15,0.15,0.0,3.0, SURF_ID='STEEL_EC3_JH', 
+      BNDF_FACE(-2:2)=.TRUE.,.TRUE.,.TRUE.,.TRUE.,.TRUE. /
+
+/creating a heat source
+&SURF ID='fire', TMP_FRONT = 500.0 /
+&OBST XB=1.5,1.55,-1.0,-0.1,0.5,2.5, SURF_IDS(2)='fire' /
+
+/creating an output boundary file
+/for now, fds2fem can use wall temperature or adiabatic surface temperature.
+/one can define many output quantities, the configuration file of fds2fem is
+/used to choose the quantity that will be used in the mapping.
+&BNDF QUANTITY='ADIABATIC SURFACE TEMPERATURE'/
+&BNDF QUANTITY='CONVECTIVE HEAT FLUX' /
+&BNDF QUANTITY='RADIATIVE HEAT FLUX' /
+&BNDF QUANTITY='NET HEAT FLUX' /
+&BNDF QUANTITY='WALL TEMPERATURE' /
+
+/ steel: properties from EC3
+&MATL ID               = 'STEEL_EC3'
+      DENSITY = 7850.
+      EMISSIVITY=0.9
+      CONDUCTIVITY_RAMP = 'STEEL_EC3_KS' 
+      SPECIFIC_HEAT_RAMP = 'STEEL_EC3_CP'/ 
+
+&SURF ID ='STEEL_EC3_JH'
+      MATL_ID = 'STEEL_EC3'
+      THICKNESS  =  0.005
+      COLOR = 'STEEL BLUE'
+      IGNITION_TEMPERATURE = 10000./
+/temperature dependent KS and CP according to EC3
+&RAMP ID = 'STEEL_EC3_KS',  T = 20 ,  F = 53.334 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 200 ,  F = 47.34 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 400 ,  F = 40.68 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 600 ,  F = 34.02 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 700 ,  F = 30.69 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 740 ,  F = 29.358 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 760 ,  F = 28.692 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 780 ,  F = 28.026 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 800 ,  F = 27.3 /
+&RAMP ID = 'STEEL_EC3_KS',  T = 1200 ,  F = 27.3 /
+
+&RAMP ID = 'STEEL_EC3_CP',  T = 20 ,  F = 0.43980176 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 100 ,  F = 0.48762 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 200 ,  F = 0.52976 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 300 ,  F = 0.56474 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 400 ,  F = 0.60588 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 600 ,  F = 0.760217391304348 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 660 ,  F = 0.832692307692308 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 680 ,  F = 0.890172413793104 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 700 ,  F = 1.00815789473684 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 715 ,  F = 1.23130434782609 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 720 ,  F = 1.38833333333333 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 725 ,  F = 1.66615384615385 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 730 ,  F = 2.29125 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 735 ,  F = 0.65 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 740 ,  F = 2.525 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 745 ,  F = 1.81785714285714 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 750 ,  F = 1.48289473684211 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 755 ,  F = 1.2875 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 760 ,  F = 1.15948275862069 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 770 ,  F = 1.00192307692308 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 775 ,  F = 0.95 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 785 ,  F = 0.875 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 800 ,  F = 0.803260869565217 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 820 ,  F = 0.745224719101124 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 840 ,  F = 0.70848623853211 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 860 ,  F = 0.683139534883721 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 900 ,  F = 0.650443786982248 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 905 ,  F = 0.65 /
+&RAMP ID = 'STEEL_EC3_CP',  T = 1200 ,  F = 0.65 /
+
+&TAIL

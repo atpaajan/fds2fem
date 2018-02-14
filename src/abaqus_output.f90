@@ -141,6 +141,9 @@ subroutine dump_abaqus_physical()
               
           write(iochannel(1),'(a)') '** fds2fem-physical-marker (do not remove)'
           write(iochannel(1),'(2(a))') '*Physical Constants, absolute zero=-273.15, stefan boltzmann=5.669E-8' 
+          ! FDS SIGMA=5.670373E-8_EB
+          ! https://physics.nist.gov/cuu/Constants/, Source: 2014 CODATA 5.670367 E-8
+          write(iochannel(1),'(2(a))') '*Physical Constants, absolute zero=-273.15, stefan boltzmann=5.670E-8' 
 
         end if
 

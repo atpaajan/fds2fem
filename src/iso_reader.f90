@@ -533,11 +533,11 @@ Subroutine import_cfast_data()
 
      ast_output_if: If (Trim(transfer_quantity) == 'adiabatic_surface_temperature') Then
         ast_target_loop: Do j = 1, n_targets
-           fds_devc_rloss(1,j) = -0.001*cfast_target_epsilon(j)*5.67E-8*((fds_devc_data(1,j)+273.15)**4) ! t=0 correction, kW/m2
-           fds_devc_rflux(1,j) =  0.001*cfast_target_epsilon(j)*5.67E-8*((fds_devc_data(1,j)+273.15)**4) ! t=0 correction, kW/m2
+           ! Stefan-Boltzmann https://physics.nist.gov/cuu/Constants/, Source: 2014 CODATA 5.670367 E-8
+           fds_devc_rloss(1,j) = -0.001*cfast_target_epsilon(j)*5.670367E-8*((fds_devc_data(1,j)+273.15)**4) ! t=0 correction, kW/m2
            ast_row_loop: Do k = 1, fds_devc_rows(1)
               eps_rflux_inc = 1000.0*(fds_devc_rflux(k,j) - fds_devc_rloss(k,j)) ! CFAST rloss is negative
-              a_ast   = cfast_target_epsilon(j)*5.67E-8
+              a_ast   = cfast_target_epsilon(j)*5.670367E-8
               b_ast   = hcoeff ! W/m2.K, default, no target specific information available
               c_ast   = -eps_rflux_inc - hcoeff*(fds_devc_data(k,j)+273.15)  ! Kelvin
               alp_ast = (Sqrt(3.0)*Sqrt(27.0*a_ast**2*b_ast**4 - 256.0*a_ast**3*c_ast**3) + 9.0*a_ast*b_ast**2)**(1.0/3.0)

@@ -1,0 +1,63 @@
+#------------------------------------
+# fds2abqs: Sample configuration file
+#------------------------------------
+#
+# This uses BNDF wall temperature output of FDS. 
+# FDS and ABAQUS geometries are not matching, translation and
+# rotation is needed.
+# Each FDS patch (bndf surface) is matched to the corresponding
+# ABAQUS nset using the connectivity file nset_bndfA.in
+
+# Basic settings
+
+fds_input  fds_tc3_2.fds
+fem_input  TC3_m1A.inp
+fem_mode   abaqus
+fds_output bndf
+
+# Transfer quantity
+quantity   wall_temperature
+
+# NSET-DEVC/BNDF connectivity
+# The connectivity file should usually be given. Without a
+# Abaqus nset list, the FDS data is mapped to all Abaqus
+# nsets and this is usually not wanted.
+
+# Now all FDS patch numbers are given for the nset. Note that
+# the FDS input uses MULT to create the OBSTs so that there
+# will be many patches. In total, 34 patches are written to
+# the BNDF file.
+nset_input nset_bndfA.in
+
+# Node set analysis
+fds_statistics on
+fem_statistics on
+
+# Dump configuration
+dump_fds_nodes vtk
+dump_fds_data  vtk
+dump_fem_nodes vtk
+dump_fem_data  vtk
+
+# Model matching
+match_translate manual
+match_rotate    manual
+
+# Below the fds2fem outputted centre points of the Boundig
+# Boxes are used to specify "a common point" for both geometries
+# for the (x,y) plane. The z coordinate is the z coordinate of the
+# top surface.
+origin_fds   0.6 0.0 -0.3
+origin_fem   0.0 0.6 0.1
+
+# Do a 90 degree rotation around the z-axis (azimuthal angle alpha)
+euler_alpha  90.0
+euler_beta   0.0
+euler_gamma  0.0
+
+# Mesh mapping
+mapping nearest
+ 
+mp_n    4
+mp_nmx  8
+mp_deg  2.0

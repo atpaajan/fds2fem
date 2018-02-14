@@ -1,0 +1,8 @@
+Example case 1
+--------------
+
+1) Run FDS2FEM using the config file
+
+   $ fds2fem config_devc.in
+
+2) Run the ABAQUS simulation
