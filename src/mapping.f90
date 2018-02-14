@@ -529,7 +529,7 @@ subroutine map_devc_to_nset()
               l_loop: Do l = 2, Ubound(connectivity_table,2)
                  If (fds_idevc(k) == connectivity_table_num(i,l)) Then
                     fem_data(1:ntimes_fem,j) = fem_data(1:ntimes_fem,j) + fds_data(1:ntimes_fds,k)
-                    cfast_eps = cfast_eps + cfast_target_epsilon(k)
+                    If (cfast_input) cfast_eps = cfast_eps + cfast_target_epsilon(k)
                     m = m + 1
                  End If
               End Do l_loop

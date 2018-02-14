@@ -1,0 +1,128 @@
+EU-Fire-Resist project, fds2fem mapping tool between FDS and ABAQUS
+A solid wall with a hole, hot plate centrally located is used to heat
+the surface.
+
+This FDS file produces outputs both for wall (surface) temperature and
+adiabatic surface temperature. Both BNDF and DEVC outputs are produced.
+This means that just one FDS calculation is needed for all different
+fds2fem options (transfered quantity, bndf/devc data).
+
+ Fire Dynamics Simulator
+ Revision         : FDS6.6.0-1036-g570108c
+ Revision Date    : Mon Feb 12 17:57:29 2018 -0500
+
+&HEAD CHID='fds_tc3_2', TITLE='Hole in the wall - heat source' /
+&MESH XB= 0.0,1.5,-1.,1.,-0.5,0.5, IJK=30,40,20 /
+&TIME T_END=600.0 /
+&DUMP NFRAMES=100., DT_BNDF = 10./
+/setting the implicit boundary file output for all surfaces off.
+/just those surfaces that the user wants to import to a FEM code
+/should be used to generate the BNDF output.
+&MISC BNDF_DEFAULT=.FALSE. /
+
+/open boundary conditions
+&VENT MB='XMIN', SURF_ID='OPEN' /
+&VENT MB='XMAX', SURF_ID='OPEN' /
+&VENT MB='YMIN', SURF_ID='OPEN' /
+&VENT MB='YMAX', SURF_ID='OPEN' /
+&VENT MB='ZMAX', SURF_ID='OPEN' /
+
+/creating the wall
+&OBST XB=0.,0.2,-0.75,0.75,-0.4,-0.3, BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+&OBST XB=1.,1.2,-0.75,0.75,-0.4,-0.3, BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+
+/creating part with the hole
+&MULT ID='wall_left_down', DXB=0.01,0.01,0.0,-0.01,0.0,0.0, N_LOWER=0, N_UPPER=40 /
+&MULT ID='wall_left_up', DXB=0.01,0.01,0.0,0.01,0.0,0.0, N_LOWER=0, N_UPPER=40 /
+&MULT ID='wall_right_down', DXB=0.01,0.01,0.01,0.0,0.0,0.0, N_LOWER=0, N_UPPER=40 /
+&MULT ID='wall_right_up', DXB=0.01,0.01,-0.01,0.0,0.0,0.0, N_LOWER=0, N_UPPER=40 /
+
+/the BNDF output is defined for those surfaces that are wanted to be
+/imported in the FEM code. The FDS "patch" number is the ordinal number
+/of the lines that produce the BNDF output.
+&OBST XB=0.2,0.21,-0.75,-0.01,-0.4,-0.3, THICKEN=.TRUE., MULT_ID='wall_left_down', BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+&OBST XB=0.6,0.61,-0.75,-0.4,-0.4,-0.3, THICKEN=.TRUE.,  MULT_ID='wall_left_up', BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+&OBST XB=0.2,0.21,0.01,0.75,-0.4,-0.3, THICKEN=.TRUE., MULT_ID='wall_right_down', BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+&OBST XB=0.6,0.61,0.4,0.75,-0.4,-0.3, THICKEN=.TRUE., MULT_ID='wall_right_up', BNDF_FACE(3)=.TRUE., SURF_ID='CONCRETE' /
+
+/creating a heat source
+&SURF ID='fire', TMP_FRONT = 700.0 /
+&OBST XB=0.2,1.0,-0.35,0.35,0.45,0.5, SURF_IDS(3)='fire' /
+&REAC FUEL='ETHYLENE' /
+
+/creating an output boundary file
+/for now, fds2fem can use wall temperature or adiabatic surface temperature.
+/one can define many output quantities, the configuration file of fds2fem is
+/used to choose the quantity that will be used in the mapping.
+&BNDF QUANTITY='ADIABATIC SURFACE TEMPERATURE'/
+&BNDF QUANTITY='CONVECTIVE HEAT FLUX' /
+&BNDF QUANTITY='RADIATIVE HEAT FLUX' /
+&BNDF QUANTITY='NET HEAT FLUX' /
+&BNDF QUANTITY='WALL TEMPERATURE' /
+
+/ceating concrete
+&SURF ID='CONCRETE', MATL_ID='C30', THICKNESS=0.1, COLOR='GRAY' /
+
+/material properties
+&MATL ID=         'C30'
+      EMISSIVITY = 0.7
+      DENSITY = 2250
+      CONDUCTIVITY_RAMP = 'CONCRETE_KS'
+      SPECIFIC_HEAT_RAMP = 'CONCRETE_CP'/
+
+/Concrete specific heat ramp
+&RAMP ID='CONCRETE_CP', F=2.0, T=20./
+&RAMP ID='CONCRETE_CP', F=0.4, T=40./
+&RAMP ID='CONCRETE_CP', F=0.075, T=100./
+&RAMP ID='CONCRETE_CP', F=2.0, T=129./
+&RAMP ID='CONCRETE_CP', F=3.0, T=130./
+&RAMP ID='CONCRETE_CP', F=6.0, T=131./
+&RAMP ID='CONCRETE_CP', F=6.0, T=140./
+&RAMP ID='CONCRETE_CP', F=4.5, T=141./
+&RAMP ID='CONCRETE_CP', F=1.0, T=150./
+&RAMP ID='CONCRETE_CP', F=1.0, T=200./
+&RAMP ID='CONCRETE_CP', F=1.1, T=400./
+&RAMP ID='CONCRETE_CP', F=1.1, T=1200./
+
+/concrete thermal conductivity ramp
+&RAMP ID='CONCRETE_KS', T=20., F=1.487623/
+&RAMP ID='CONCRETE_KS', T=60., F=1.424537/
+&RAMP ID='CONCRETE_KS', T=100., F=1.363675/
+&RAMP ID='CONCRETE_KS', T=140., F=1.305037/
+&RAMP ID='CONCRETE_KS', T=180., F=1.248623/
+&RAMP ID='CONCRETE_KS', T=220., F=1.194433/
+&RAMP ID='CONCRETE_KS', T=260., F=1.142467/
+&RAMP ID='CONCRETE_KS', T=300., F=1.092725/
+&RAMP ID='CONCRETE_KS', T=340., F=1.045207/
+&RAMP ID='CONCRETE_KS', T=380., F=0.999913/
+&RAMP ID='CONCRETE_KS', T=420., F=0.956843/
+&RAMP ID='CONCRETE_KS', T=460., F=0.915997/
+&RAMP ID='CONCRETE_KS', T=500., F=0.877375/
+&RAMP ID='CONCRETE_KS', T=540., F=0.840977/
+&RAMP ID='CONCRETE_KS', T=580., F=0.806803/
+&RAMP ID='CONCRETE_KS', T=620., F=0.774853/
+&RAMP ID='CONCRETE_KS', T=660., F=0.745127/
+&RAMP ID='CONCRETE_KS', T=700., F=0.717625/
+&RAMP ID='CONCRETE_KS', T=740., F=0.692347/
+&RAMP ID='CONCRETE_KS', T=780., F=0.669293/
+&RAMP ID='CONCRETE_KS', T=820., F=0.648463/
+&RAMP ID='CONCRETE_KS', T=860., F=0.629857/
+&RAMP ID='CONCRETE_KS', T=900., F=0.613475/
+&RAMP ID='CONCRETE_KS', T=940., F=0.599317/
+&RAMP ID='CONCRETE_KS', T=980., F=0.587383/
+&RAMP ID='CONCRETE_KS', T=1020., F=0.577673/
+&RAMP ID='CONCRETE_KS', T=1060., F=0.570187/
+&RAMP ID='CONCRETE_KS', T=1100., F=0.564925/
+&RAMP ID='CONCRETE_KS', T=1140., F=0.561887/
+&RAMP ID='CONCRETE_KS', T=1180., F=0.561073/
+&RAMP ID='CONCRETE_KS', T=1199., F=0.5615/
+&RAMP ID='CONCRETE_KS', T=1200., F=0.5615/
+
+/Concrete density ramp
+/&RAMP ID='CONCRETE_DENS', T=20., F=2300./
+/&RAMP ID='CONCRETE_DENS', T=115., F=2300./
+/&RAMP ID='CONCRETE_DENS', T=200., F=2254./
+/&RAMP ID='CONCRETE_DENS', T=400., F=2185./
+/&RAMP ID='CONCRETE_DENS', T=1200., F=2024./
+
+&TAIL

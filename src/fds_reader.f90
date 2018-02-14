@@ -1927,11 +1927,11 @@ subroutine import_bndf_geom()
   !-------------------------
 
   ! Total number of nodes, patches and elements
-  ibndf=selected_bndf(); nnode=0; nelement=0
+  ibndf=selected_bndf(); nnode=0; nelement=0; npatch=0
   do imesh=1,nmesh
-    nnode=nnode+bndf_nodes(ibndf,imesh)
-    npatch=npatch+bndf_patches(ibndf,imesh)
-    nelement=nelement+bndf_elements(ibndf,imesh)
+    nnode    = nnode    + bndf_nodes(ibndf,imesh)
+    npatch   = npatch   + bndf_patches(ibndf,imesh)
+    nelement = nelement + bndf_elements(ibndf,imesh)
   end do
 
   allocate(fds_bndf_xyz(nnode,3),stat=ios); call error_allocate(ios)

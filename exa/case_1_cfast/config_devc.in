@@ -1,0 +1,45 @@
+#-----------------------------------
+# fds2fem: Sample configuration file
+#-----------------------------------
+#
+# CFAST target output used to describe fire environment
+# ABAQUS nsets connected to CFAST targets using the nset connectivity file
+#
+# Example 1 case
+# Room dimensions: x: -5.0,5.0 cfast: width=10, depth 3, height 3
+#                  y: -1.5,1.5 cfast: room origin (corner): -5,-1.5,0
+#                  z: 0.0,3.0 
+# Target doors: -5.0,-5.0,-0.5, 0.5,0.0,2.0: cfast target xyz= 0, 1.5, 1.5
+#                5.0, 5.0,-0.5, 0.5,0.0,2.0: cfast target xyz=10, 1.5, 1.5
+#               -0.5, 0.5,-1.5,-1.5,0.0,2.0: cfast target xyz= 5, 0.0, 1.5
+# Cfast: no hot plate, 1 MW fire is used, linear 300 s growth, area_max=1m2
+#        Fire position: in the middle of the floor (close to target 3, DoorMiddle)
+#        4th door added that is open (oxygen/pressure release needed)
+
+# Basic settings
+cfast_input  room_cfast
+fem_input    door.inp
+fem_mode     abaqus
+
+# emissivity and heat transfer coefficient are needed, if T_ast transfered
+# Cfast mode: Read emissivities of the targets from the Cfast input file
+# (e_coeff below is not used)
+e_coeff  0.9
+h_coeff 25.0
+
+# Give the transfered quantity:
+quantity  adiabatic_surface_temperature
+# quantity   wall_temperature
+
+# NSET-DEVC/BNDF connectivity
+nset_input nset_devc.in
+
+# Node set analysis
+fem_statistics off
+
+# Dump configuration: off or xyz/sfd or vtk
+dump_cfast_nodes  vtk
+dump_cfast_data   vtk
+dump_fem_nodes vtk
+dump_fem_data  vtk
+

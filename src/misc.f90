@@ -115,7 +115,7 @@ subroutine deallocate_excess_fds_arrays()
     deallocate(fds_bndf_time,stat=ios); call error_allocate(ios)
   end if
   
-  if (trim(dump_fds_model) == 'off') then
+  if (trim(dump_fds_model) == 'off' .And. Trim(dump_fds_data) == 'off') then
     if (allocated(fds_bndf_xyz)) then
       deallocate(fds_bndf_xyz,stat=ios); call error_allocate(ios)
     end if
