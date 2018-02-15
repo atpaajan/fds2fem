@@ -773,10 +773,17 @@ subroutine dump_fds_element_data_vtk(itime_begin,itime_end,average)
     do j=1,ncell
       dsum=0.0
       do itime=itime_begin,itime_end
-        dsum=dsum+fds_data(itime,fds_bndf_el(j,1))
-        dsum=dsum+fds_data(itime,fds_bndf_el(j,2))
-        dsum=dsum+fds_data(itime,fds_bndf_el(j,3))
-        dsum=dsum+fds_data(itime,fds_bndf_el(j,4))
+        ! Bug here: fds_bndf_el is pointing to all bndf patches
+        !           fds_data is filtered array, just the patches that are used (nset)
+        ! Now deallocate_excess_fds_arrays does not deallocate fds_bnds_data if dump_fds_data=vtk
+        dsum=dsum+fds_bndf_data(itime,fds_bndf_el(j,1))
+        dsum=dsum+fds_bndf_data(itime,fds_bndf_el(j,2))
+        dsum=dsum+fds_bndf_data(itime,fds_bndf_el(j,3))
+        dsum=dsum+fds_bndf_data(itime,fds_bndf_el(j,4))
+!!$        dsum=dsum+fds_data(itime,fds_bndf_el(j,1))
+!!$        dsum=dsum+fds_data(itime,fds_bndf_el(j,2))
+!!$        dsum=dsum+fds_data(itime,fds_bndf_el(j,3))
+!!$        dsum=dsum+fds_data(itime,fds_bndf_el(j,4))
       end do
       dsum=0.25*dsum/ntimes
       write(iochannel(1),'(es15.7e3)') dsum
@@ -819,10 +826,17 @@ subroutine dump_fds_element_data_vtk(itime_begin,itime_end,average)
     write(iochannel(1),'(a)') 'LOOKUP_TABLE default'
 
     do j=1,ncell
-      dsum=0.25*fds_data(itime,fds_bndf_el(j,1))
-      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,2))
-      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,3))
-      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,4))
+      ! Bug here: fds_bndf_el is pointing to all bndf patches
+      !           fds_data is filtered array, just the patches that are used (nset)
+      ! Now deallocate_excess_fds_arrays does not deallocate fds_bnds_data if dump_fds_data=vtk
+      dsum=0.25*fds_bndf_data(itime,fds_bndf_el(j,1))
+      dsum=dsum+0.25*fds_bndf_data(itime,fds_bndf_el(j,2))
+      dsum=dsum+0.25*fds_bndf_data(itime,fds_bndf_el(j,3))
+      dsum=dsum+0.25*fds_bndf_data(itime,fds_bndf_el(j,4))
+!!$      dsum=0.25*fds_data(itime,fds_bndf_el(j,1))
+!!$      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,2))
+!!$      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,3))
+!!$      dsum=dsum+0.25*fds_data(itime,fds_bndf_el(j,4))
       write(iochannel(1),'(es15.7e3)') dsum
     end do
 

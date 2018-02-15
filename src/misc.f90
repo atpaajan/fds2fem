@@ -121,7 +121,7 @@ subroutine deallocate_excess_fds_arrays()
     end if
   end if
   
-  if (allocated(fds_bndf_data)) then
+  if (allocated(fds_bndf_data) .And. Trim(dump_fds_data) /= 'vtk') then
     deallocate(fds_bndf_data,stat=ios); call error_allocate(ios)
   end if
 
