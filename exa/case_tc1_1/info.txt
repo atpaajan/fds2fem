@@ -6,6 +6,8 @@ Example case tc1
    $ fds_mpi_intel_linux_64 fds_tc1_1.fds
 
 2) Run FDS2FEM using either of the config files
+   (Copy the FEM input files TC1_m1A/BUser.inp => TC1_m1A/B.inp so the original
+    FEM input files are not changed)
 
    $ fds2fem config_tc1A.in
 

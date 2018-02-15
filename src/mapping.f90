@@ -148,6 +148,14 @@ subroutine mapping_module()
             !------------
             ! BNDF output
             !------------
+            if (ubound(connectivity_table_num,2)==1) then
+              ! Case, where no FDS patches given, just the FEM nset names
+              ! This is a special case, below the 2:ubound(connectivity_table_num,2) is
+              ! not well defined for this case (but it seems to work Intel Ifort/Linux compiler 17.0.0) 
+              fds_mask(k)=.true. 
+              nnodes_fds_sub=nnodes_fds_sub+1
+              cycle fds_mask_loop
+            end if
             if (sum(connectivity_table_num(i,2:ubound(connectivity_table_num,2))) == 0) then
               fds_mask(k)=.true. 
               nnodes_fds_sub=nnodes_fds_sub+1

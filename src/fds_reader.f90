@@ -1978,6 +1978,7 @@ subroutine import_bndf_geom()
       if (ios /= 0) call error_read_file(fds_bndf_file(ibndf,imesh))
 
       allocate(fds_bndf_xyz_tmp(i1:i2,j1:j2,k1:k2),stat=ios); call error_allocate(ios)
+      fds_bndf_xyz_tmp=0
 
       do k=k1,k2
         do j=j1,j2

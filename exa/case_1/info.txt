@@ -6,6 +6,8 @@ Example case 1
    $ fds_mpi_intel_linux_64 room.fds
 
 2) Run FDS2FEM using either of the config files
+   (Copy the FEM input file doorUser.inp => door.inp so the original
+    FEM input file is not changed)
 
    $ fds2fem config_bndf.in
 

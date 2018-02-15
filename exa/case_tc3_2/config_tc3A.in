@@ -23,10 +23,13 @@ quantity   wall_temperature
 # Abaqus nset list, the FDS data is mapped to all Abaqus
 # nsets and this is usually not wanted.
 
-# Now all FDS patch numbers are given for the nset. Note that
-# the FDS input uses MULT to create the OBSTs so that there
-# will be many patches. In total, 34 patches are written to
-# the BNDF file.
+# Note that the FDS input uses MULT to create the OBSTs so
+# that there will be many patches. In total, 50 patches are
+# written to the BNDF file.
+# Note: No FDS patches are given on the nset file for the FEM nsets.
+#       Thus, all FDS parches are used. So, if you want to use all
+#       FDS patches for (some) nset, then the line just has the
+#       nset name.
 nset_input nset_bndfA.in
 
 # Node set analysis
@@ -34,10 +37,13 @@ fds_statistics on
 fem_statistics on
 
 # Dump configuration
+#FDS dump module
 dump_fds_nodes vtk
 dump_fds_data  vtk
-dump_fem_nodes vtk
-dump_fem_data  vtk
+dump_fds_model off
+dump_fem_nodes off
+dump_fem_data  off
+dump_fem_model off
 
 # Model matching
 match_translate manual

@@ -2,6 +2,8 @@ Example case 1
 --------------
 
 1) Run FDS2FEM using the config file
+   (Copy the FEM input file doorUser.inp => door.inp so the original
+    FEM input file is not changed)
 
    $ fds2fem config_devc.in
 
