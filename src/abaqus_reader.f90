@@ -144,7 +144,7 @@ subroutine abaqus_reader_module()
       call cpu_time(t1); call inherit_instance_elements(); call cpu_time(t2)
       !write(*,'(3(a))') '(', trim(sec2str(t2-t1)), ' s)'
     else
-      !write(*,'(a)') '(omitted)'
+      write(*,'(a)') '(omitted)'
       !write(*,'(3(a))') '(', trim(sec2str(t2-t1)), ' s)'
     end if
 
@@ -197,7 +197,7 @@ subroutine abaqus_reader_module()
 
       write(*,'(t3,a)') 'Calculating nodal surface areas'
       call cpu_time(t1); call create_node_surface_map(); call cpu_time(t2)
-      ! write(*,'(t6,3(a))') 'Ready in ', trim(sec2str(t2-t1)), ' s'
+      !write(*,'(t6,3(a))') 'Ready in ', trim(sec2str(t2-t1)), ' s'
 
       abaqus_model_available=.true.
       fem_model_available=.true.
@@ -2009,7 +2009,8 @@ subroutine read_instance_elements()
 
   n_instance_elements=0
   do i_element=1,n_element
-    if (len_trim(element_instance(i_element)) /= 0 .and. len_trim(element_instance(i_element)) == 0) then
+    !if (len_trim(element_instance(i_element)) /= 0 .and. len_trim(element_instance(i_element)) == 0) then
+    if (len_trim(element_instance(i_element)) /= 0) then
       n_instance_elements=n_instance_elements+element_elements(i_element)
     end if
   end do
@@ -2043,7 +2044,7 @@ subroutine read_instance_elements()
       if (line_number <= element_lines(i_element,3) .and. &
           line_number >= element_lines(i_element,2)) then
 
-        if (len_trim(element_instance(i_element)) /= 0 .and. len_trim(element_instance(i_element)) == 0) then
+        if (len_trim(element_instance(i_element)) /= 0) then
           etype=trim(lowercase(element_type(i_element)))
           
           if (trim(etype) == 'dc3d8'  .or. &
@@ -2452,7 +2453,7 @@ subroutine inherit_instance_elements()
   allocate(model_element_part(nelements_model),stat=ios);     call error_allocate(ios)
   allocate(model_element_instance(nelements_model),stat=ios); call error_allocate(ios)
   allocate(model_element_number(nelements_model),stat=ios);   call error_allocate(ios)
-  allocate(model_element_type(nelements_model),stat=ios);   call error_allocate(ios)
+  allocate(model_element_type(nelements_model),stat=ios);     call error_allocate(ios)
   allocate(model_element_node(nelements_model,8),stat=ios);   call error_allocate(ios)
 
   model_element_part     = ''
@@ -2526,7 +2527,7 @@ subroutine create_element_node_map()
 
   n_model_node=ubound(model_node_number,1)
   n_model_element=ubound(model_element_node,1)
-  
+
   allocate(model_element_int_node(n_model_element,8),stat=ios); call error_allocate(ios)
   model_element_int_node=0
 

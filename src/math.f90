@@ -16,7 +16,7 @@ function euler(e_alpha,e_beta,e_gamma) result(rm)
   real(kind=rk), dimension(3,3) :: rm
 
   ! Temporary fix...
-  e_alpha=-e_alpha; e_beta=-e_beta; e_gamma=-e_gamma
+  !e_alpha=-e_alpha; e_beta=-e_beta; e_gamma=-e_gamma
 
   rm(1,1)= cos(e_gamma)*cos(e_alpha)-cos(e_beta)*sin(e_alpha)*sin(e_gamma)
   rm(1,2)= cos(e_gamma)*sin(e_alpha)+cos(e_beta)*cos(e_alpha)*sin(e_gamma)
