@@ -4,6 +4,8 @@
 !-----------------------------------------------------------
 Module iso_reader
 
+  Logical :: cfast_old_format
+
 Contains
 
 Subroutine iso_reader_module()
@@ -68,40 +70,40 @@ End Subroutine iso_reader_module
 ! Auxiliary subs
 !***************
 
-function number_csv_rows(filename) result(rows)
+Function number_csv_rows(filename) Result(rows)
 !------------------------------------------
 ! Find out the number of rows in a CSV-file
 !------------------------------------------
-  use error_messages
-  use global_constants
-  implicit none
+  Use error_messages
+  Use global_constants
+  Implicit None
 
-  integer :: ios,rows
-  character(len=chr80) :: filename
-  character(len=input_line_length) :: input_line
+  Integer :: ios,rows
+  Character(len=chr80) :: filename
+  Character(len=input_line_length) :: input_line
 
-  open(unit=iochannel(1),file=trim(filename),status='old',iostat=ios)
-  if (ios /= 0) call error_open_file(filename)
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios)
+  If (ios /= 0) Call error_open_file(filename)
 
   ! How many rows? 
   rows=0
-  rows_loop: do  
-    read(iochannel(1),*,iostat=ios) input_line
-    select case(ios)
-    case (:-1)
-      exit rows_loop
-    case (0)
+  rows_loop: Do  
+    Read(iochannel(1),*,iostat=ios) input_line
+    Select Case(ios)
+    Case (:-1)
+      Exit rows_loop
+    Case (0)
       rows=rows+1
-    case (1:)
-      call error_read_file(filename)
-    end select
-  end do rows_loop
+    Case (1:)
+      Call error_read_file(filename)
+    End Select
+  End Do rows_loop
 
-  close(unit=iochannel(1))
+  Close(unit=iochannel(1))
 
-end function number_csv_rows
+End Function number_csv_rows
 
-function number_csv_cols(filename) result(cols)
+Function number_csv_cols(filename) Result(cols)
 !---------------------------------------------
 ! Find out the number of columns in a CSV-file
 !
@@ -114,36 +116,36 @@ function number_csv_cols(filename) result(cols)
 ! Also, the number of columns is counted based
 ! on the first line of the CSV-file.
 !---------------------------------------------
-  use error_messages
-  use global_constants
-  implicit none
+  Use error_messages
+  Use global_constants
+  Implicit None
 
-  integer :: i,ios,cols
-  character :: ctmp
-  character(len=chr80) :: filename
-  character(len=input_line_length) :: input_line
+  Integer :: i,ios,cols
+  Character :: ctmp
+  Character(len=chr80) :: filename
+  Character(len=input_line_length) :: input_line
 
-  open(unit=iochannel(1),file=trim(filename),status='old',iostat=ios)
-  if (ios /= 0) call error_open_file(filename)
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios)
+  If (ios /= 0) Call error_open_file(filename)
 
   cols=0
-  read(iochannel(1),'(a)') input_line
-  If (len_trim(input_line) > input_line_length - 1) Then
+  Read(iochannel(1),'(a)') input_line
+  If (len_Trim(input_line) > input_line_length - 1) Then
      Write(*,fmt='(a,a)')'ERROR: Too long line(s) in file ',Trim(filename)
      Stop
   End If
-  do i=1,len_trim(input_line)
-    read(input_line(i:i),'(a)',iostat=ios) ctmp
-    if (ios /= 0) call error_read_file(filename)
-    if (ctmp == ',') then
+  Do i=1,len_Trim(input_line)
+    Read(input_line(i:i),'(a)',iostat=ios) ctmp
+    If (ios /= 0) Call error_read_file(filename)
+    If (ctmp == ',') Then
       cols=cols+1
-    end if
-  end do
+    End If
+  End Do
   cols=cols+1
 
-  close(unit=iochannel(1))
+  Close(unit=iochannel(1))
 
-end function number_csv_cols
+End Function number_csv_cols
 
 Function csv_line_column(input_line,icol) Result(column)
 !----------------------------------------
@@ -160,7 +162,7 @@ Function csv_line_column(input_line,icol) Result(column)
 
   cols = 1; i_start_col = 1; i_end_col = 0
 
-  Do i = 1, Len_trim(input_line)
+  Do i = 1, Len_Trim(input_line)
      Read(input_line(i:i),'(a)') ctmp
      If (ctmp == ',') Then
         If (cols == icol) i_end_col = i - 1
@@ -168,7 +170,7 @@ Function csv_line_column(input_line,icol) Result(column)
         cols = cols + 1
      End If
   End Do
-  If (i_end_col == 0 ) i_end_col = Len_trim(input_line)
+  If (i_end_col == 0 ) i_end_col = Len_Trim(input_line)
   
   column = input_line(i_start_col:i_start_col+Min(chr20,i_end_col-i_start_col))
   
@@ -188,17 +190,24 @@ Subroutine read_cfast_input_file()
 
   Integer :: ios, j, k
   Integer :: n_trg, n_mat, n_com
+  ! New Cfast input file format is similar to FDS namelists
+  !   TARGET => &DEVC
+  !   MATL   => &MATL
+  !   COMPA  => &COMP
+  Integer :: n_trg_newfmt, n_mat_newfmt, n_com_newfmt
   Logical :: file_exists
   Character(len=chr80) :: filename
   Character(len=input_line_length) :: input_line
   Character(len=chr20) :: input_column
   
   filename = Trim(fds_input_file) // '.in'
+  cfast_old_format = .False. ! Default is the new input file format
   Inquire(file=filename, exist=file_exists)
   If (file_exists) Then
      Open(unit=iochannel(1),file=Trim(filename), status='old', iostat=ios)
      If (ios /= 0) Call error_open_file(filename)
      n_trg = 0; n_mat = 0; n_com = 0
+     n_trg_newfmt = 0; n_mat_newfmt = 0; n_com_newfmt = 0
      row_loop: Do
         Read(iochannel(1),*,iostat=ios) input_line
         Select Case(ios)
@@ -208,6 +217,9 @@ Subroutine read_cfast_input_file()
            If (input_line(1:6) == 'TARGET') n_trg = n_trg + 1
            If (input_line(1:4) == 'MATL')   n_mat = n_mat + 1
            If (input_line(1:5) == 'COMPA')  n_com = n_com + 1
+           If (input_line(1:6) == '&DEVC ') n_trg_newfmt = n_trg_newfmt + 1
+           If (input_line(1:6) == '&MATL ') n_mat_newfmt = n_mat_newfmt + 1
+           If (input_line(1:6) == '&COMP ') n_com_newfmt = n_com_newfmt + 1
         Case (1:)
            Call error_read_file(filename)
         End Select
@@ -216,67 +228,126 @@ Subroutine read_cfast_input_file()
   Else
      Write(*,'(a,a,a)') 'ERROR: CFAST input file ',Trim(filename),' is not found'
      Stop
-  End if
+  End If
 
-  Allocate(cfast_target_xyz(3,n_trg),stat=ios);   Call error_allocate(ios)
-  Allocate(cfast_target_name( n_trg),stat=ios);   Call error_allocate(ios)
+  If (n_trg + n_mat + n_com > 0) Then
+     ! Old Cfast input file format
+     cfast_old_format = .True.
+     If (n_trg_newfmt + n_mat_newfmt + n_com_newfmt > 0) Then
+        Write(*,'(a,a,a)') 'ERROR: CFAST input file ',Trim(filename), &
+             ' has both old and new input file format lines.'
+        Stop
+     End If
+     Write(*,'(t3,a)') 'Old Cfast input file format detected'
+  Else
+     ! New Cfast input ile format
+     Write(*,'(t3,a)') 'New Cfast input file format detected'
+     n_trg = n_trg_newfmt
+     n_mat = n_mat_newfmt
+     n_com = n_com_newfmt
+  End If
+  
+  Allocate(cfast_target_xyz(  3,n_trg),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_target_name(   n_trg),stat=ios); Call error_allocate(ios)
   Allocate(cfast_target_epsilon(n_trg),stat=ios); Call error_allocate(ios)
 
-  Allocate(cfast_target_matl( n_trg),stat=ios); Call error_allocate(ios)
-  Allocate(cfast_target_comp( n_trg),stat=ios); Call error_allocate(ios)
-  Allocate(cfast_target_ior(3,n_trg),stat=ios); Call error_allocate(ios)
-  Allocate(cfast_comp_xyz(  3,n_com),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_target_matl(    n_trg),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_target_comp(    n_trg),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_target_ior(   3,n_trg),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_target_compname(n_trg),stat=ios); Call error_allocate(ios)
+
+  Allocate(cfast_comp_xyz(3,n_com),stat=ios); Call error_allocate(ios)
+  Allocate(cfast_comp_name( n_com),stat=ios); Call error_allocate(ios)
+
   Allocate(cfast_matl_epsilon(n_mat),stat=ios); Call error_allocate(ios)
   Allocate(cfast_matl_name(   n_mat),stat=ios); Call error_allocate(ios)
+
   cfast_target_xyz   = 0.0
   cfast_target_ior   = 0.0
   cfast_target_comp  = 0
   cfast_target_name  = ''
   cfast_target_matl  = ''
+  cfast_target_compname = ''
+  cfast_comp_name    = ''
   
-  n_trg = 0; n_mat = 0; n_com = 0
-  row_loop_2: Do
-     Read(iochannel(1),fmt='(a)',iostat=ios) input_line
-     Select Case(ios)
-     Case (:-1)
-        Exit row_loop_2
-     Case (0)
-        If (input_line(1:6) == 'TARGET') Then
-           !   1  2   3   4     5  6  7  8    9     10       11  12   13
-           !     cmp  x   y     z  nx ny nz matl_id                    id
-           !TARGET,1,2.2,1.88,2.34,0, 0, 1,CONCRETE,EXPLICIT,PDE,0.5,Targ 1
-           n_trg = n_trg + 1
-           input_column = csv_line_column(input_line,2) ; Read(input_column,*) cfast_target_comp( n_trg)
-           input_column = csv_line_column(input_line,3) ; Read(input_column,*) cfast_target_xyz(1,n_trg)
-           input_column = csv_line_column(input_line,4) ; Read(input_column,*) cfast_target_xyz(2,n_trg)
-           input_column = csv_line_column(input_line,5) ; Read(input_column,*) cfast_target_xyz(3,n_trg)
-           input_column = csv_line_column(input_line,6) ; Read(input_column,*) cfast_target_ior(1,n_trg) ! nx
-           input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_target_ior(2,n_trg) ! ny
-           input_column = csv_line_column(input_line,8) ; Read(input_column,*) cfast_target_ior(3,n_trg) ! nz
-           input_column = csv_line_column(input_line,9) ; Read(input_column,fmt='(a)') cfast_target_matl(n_trg)
-           input_column = csv_line_column(input_line,13); Read(input_column,fmt='(a)') cfast_target_name(n_trg)
+  If (cfast_old_format) Then
+     n_trg = 0; n_mat = 0; n_com = 0
+     row_loop_2: Do
+        Read(iochannel(1),fmt='(a)',iostat=ios) input_line
+        Select Case(ios)
+        Case (:-1)
+           Exit row_loop_2
+        Case (0)
+           If (input_line(1:6) == 'TARGET') Then
+              !   1  2   3   4     5  6  7  8    9     10       11  12   13
+              !     cmp  x   y     z  nx ny nz matl_id                    id
+              !TARGET,1,2.2,1.88,2.34,0, 0, 1,CONCRETE,EXPLICIT,PDE,0.5,Targ 1
+              n_trg = n_trg + 1
+              input_column = csv_line_column(input_line,2) ; Read(input_column,*) cfast_target_comp( n_trg)
+              input_column = csv_line_column(input_line,3) ; Read(input_column,*) cfast_target_xyz(1,n_trg)
+              input_column = csv_line_column(input_line,4) ; Read(input_column,*) cfast_target_xyz(2,n_trg)
+              input_column = csv_line_column(input_line,5) ; Read(input_column,*) cfast_target_xyz(3,n_trg)
+              input_column = csv_line_column(input_line,6) ; Read(input_column,*) cfast_target_ior(1,n_trg) ! nx
+              input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_target_ior(2,n_trg) ! ny
+              input_column = csv_line_column(input_line,8) ; Read(input_column,*) cfast_target_ior(3,n_trg) ! nz
+              input_column = csv_line_column(input_line,9) ; Read(input_column,fmt='(a)') cfast_target_matl(n_trg)
+              input_column = csv_line_column(input_line,13); Read(input_column,fmt='(a)') cfast_target_name(n_trg)
+           End If
+           If (input_line(1:4) == 'MATL') Then
+              !  1   2        3 4    5    6     7   
+              !     matl_id   k cp   rho  d    eps
+              !MATL,STEEL1/8,48,559,7854,0.003,0.9,"Steel, Plain Carbon (1/8 in)"
+              n_mat = n_mat + 1
+              input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_matl_epsilon( n_mat)
+              input_column = csv_line_column(input_line,2) ; Read(input_column,fmt='(a)') cfast_matl_name( n_mat)
+           End If
+           If (input_line(1:5) == 'COMPA') Then
+              !  1     2     3   4  5   6 7 8
+              !       id     w   d   h  x y z  ceil     floor     wall 
+              !COMPA,Comp 1,3.6,2.4,2.4,0,0,0,CONCRETE,CONCRETE,CONCRETE,50,50,50
+              n_com = n_com + 1
+              input_column = csv_line_column(input_line,6) ; Read(input_column,*) cfast_comp_xyz(1,n_com)
+              input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_comp_xyz(2,n_com)
+              input_column = csv_line_column(input_line,8) ; Read(input_column,*) cfast_comp_xyz(3,n_com)
+           End If
+        Case (1:)
+           Call error_read_file(filename)
+        End Select
+     End Do row_loop_2
+  Else ! new Cfast input file format
+     Call parse_cfast_head_namelist()
+     Write(*,'(t3,a,i4)') 'Cfast version: ',cfast_version
+     Write(*,'(t3,a,a)') 'Cfast title: ',Trim(cfast_title)
+     Call parse_cfast_devc_namelist()
+!!$     Do j=1,n_trg
+!!$        Write(*,'(t3,a,a)') 'trg: ',Trim(cfast_target_name(j))
+!!$        Write(*,'(t3,a,a)') 'mat: ',Trim(cfast_target_matl(j))
+!!$        Write(*,'(t3,a,a)') 'cmp: ',Trim(cfast_target_compname(j))
+!!$        Write(*,'(t3,a,3f12.6)') 'xyz: ',cfast_target_xyz(1,j),cfast_target_xyz(2,j),cfast_target_xyz(3,j)
+!!$        Write(*,'(t3,a,3f12.6)') 'ior: ',cfast_target_ior(1,j),cfast_target_ior(2,j),cfast_target_ior(3,j)
+!!$     End do
+     Call parse_cfast_matl_namelist()
+!!$     Do j=1,n_mat
+!!$        Write(*,'(t3,a,a,f12.6)') 'mat, eps: ',Trim(cfast_matl_name(j)), cfast_matl_epsilon(j)
+!!$     End do
+     Call parse_cfast_comp_namelist()
+!!$     Do j=1,n_com
+!!$        Write(*,'(t3,a,i4,a,3f12.6)') 'com ',n_com,' xyz: ',cfast_comp_xyz(1,j),cfast_comp_xyz(2,j),cfast_comp_xyz(3,j)
+!!$     End Do
+     Do j = 1, Ubound(cfast_target_compname,1)
+        Do k = 1, Ubound(cfast_comp_name,1)
+           If (Trim(cfast_target_compname(j)) == Trim(cfast_comp_name(k))) Then
+              cfast_target_comp(j) = k
+              Write(*,'(t3,a,a,a,a)') 'trg ',Trim(cfast_target_name(j)), ' is in comp ',cfast_comp_name(k)
+           End If
+        End Do
+        If (cfast_target_comp(j) == 0) Then
+           Write(*,'(4(a))') 'ERROR: Target ',Trim(cfast_target_name(j)), ': No comp found: ',&
+                Trim(cfast_target_compname(j))
+           Call error_read_file(filename)
         End If
-        If (input_line(1:4) == 'MATL') Then
-           !  1   2        3 4    5    6     7   
-           !     matl_id   k cp   rho  d    eps
-           !MATL,STEEL1/8,48,559,7854,0.003,0.9,"Steel, Plain Carbon (1/8 in)"
-           n_mat = n_mat + 1
-           input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_matl_epsilon( n_mat)
-           input_column = csv_line_column(input_line,2) ; Read(input_column,fmt='(a)') cfast_matl_name( n_mat)
-        End If
-        If (input_line(1:5) == 'COMPA') Then
-           !  1     2     3   4  5   6 7 8
-           !       id     w   d   h  x y z  ceil     floor     wall 
-           !COMPA,Comp 1,3.6,2.4,2.4,0,0,0,CONCRETE,CONCRETE,CONCRETE,50,50,50
-           n_com = n_com + 1
-           input_column = csv_line_column(input_line,6) ; Read(input_column,*) cfast_comp_xyz(1,n_com)
-           input_column = csv_line_column(input_line,7) ; Read(input_column,*) cfast_comp_xyz(2,n_com)
-           input_column = csv_line_column(input_line,8) ; Read(input_column,*) cfast_comp_xyz(3,n_com)
-        End If
-     Case (1:)
-        Call error_read_file(filename)
-     End Select
-  End Do row_loop_2
+     End Do
+  End If
 
   ! Fill the target input data arrays: emissivity and xyz=xyz_comp+xyz_targ
   cfast_target_epsilon = emissivity ! Default
@@ -297,17 +368,272 @@ Subroutine read_cfast_input_file()
   
 End Subroutine read_cfast_input_file
 
+Subroutine parse_cfast_head_namelist()
+!---------------------------------------------
+! Parse CFAST input file for TITLE and VERSION
+!
+! Assigns values to the variables
+!   cfast_chid,cfast_title
+!---------------------------------------------
+  Use error_messages
+  Use cfast_arrays
+  Use global_constants  
+  Use global_variables, only : fds_input_file
+  Use string_handling
+  Implicit None
+
+  Integer :: ios,nhead
+  Character(len=chr80) :: filename
+
+  ! HEAD-namelist group
+  Namelist /head/ version,title
+  Integer :: version
+  Character(128) :: title
+
+  filename = Trim(fds_input_file) // '.in'
+  version=0; title=''
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios) 
+  If (ios /= 0) Call error_open_file(filename)
+
+  ! Read in HEAD-namelist records
+  nhead=0
+  head_loop: Do
+     Read(iochannel(1),nml=head,iostat=ios)
+     Select Case(ios)
+     Case (:-1)
+        Exit head_loop
+     Case (0)
+        cfast_version=version
+        cfast_title=Trim(title)
+        nhead=nhead+1
+     Case(1:)
+        Write(*,'(3(a))') 'ERROR: in reading HEAD-namelist record (file ', &
+             Trim(quote(filename)), ')'
+        Call error_read_file(filename)
+     End Select
+  End Do head_loop
+
+  Close(unit=iochannel(1))
+
+  If (nhead == 0) Then
+     Write(*,'(2(a))') 'ERROR: no HEAD-namelist record found in file ', &
+          Trim(quote(filename))
+     Stop
+  End If
+
+  If (nhead > 1) Then
+     Write(*,'(2(a))') 'WARNING: multiple HEAD-namelist records found in file ', &
+          Trim(quote(filename))
+  End If
+
+End Subroutine parse_cfast_head_namelist
+
+Subroutine parse_cfast_devc_namelist()
+!---------------------------------------------
+! Parse CFAST input file for DEVC namelist (targets)
+!
+! Assigns values to the variables
+!   cfast_target_xyz,_ior,_matl,_name
+!---------------------------------------------
+  Use error_messages
+  Use cfast_arrays
+  Use global_constants  
+  Use global_variables, only : fds_input_file
+  Use string_handling
+  Implicit None
+
+  Integer :: ios,ntrg
+  Character(len=chr80) :: filename
+
+  ! DEVC-namelist group
+  real(kind=eb) :: temperature_depth,rti,setpoint,spray_density
+  real(kind=eb),dimension(3) :: location,normal
+  real(kind=eb),dimension(2) :: setpoints
+  character(64) :: comp_id,id,matl_id
+  character(64) :: type
+  logical :: adiabatic_target
+  real(kind=eb), dimension(2) :: convection_coefficients
+  namelist /devc/ comp_id, type, id, temperature_depth, location, matl_id, normal, rti, &
+       setpoint, spray_density, setpoints, adiabatic_target, convection_coefficients
+
+  filename = Trim(fds_input_file) // '.in'
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios) 
+  If (ios /= 0) Call error_open_file(filename)
+
+  ! Read in DEVC-namelist records
+  comp_id=''; location=0.0; normal=0.0; matl_id=''; id=''
+  ntrg=0
+  head_loop: Do
+     Read(iochannel(1),nml=devc,iostat=ios)
+     Select Case(ios)
+     Case (:-1)
+        Exit head_loop
+     Case (0)
+        ntrg=ntrg+1
+        cfast_target_xyz(1,ntrg) = location(1)
+        cfast_target_xyz(2,ntrg) = location(2)
+        cfast_target_xyz(3,ntrg) = location(3)
+        cfast_target_ior(1,ntrg) = normal(1)
+        cfast_target_ior(2,ntrg) = normal(2)
+        cfast_target_ior(3,ntrg) = normal(3)
+        cfast_target_matl(ntrg)  = Trim(matl_id)
+        cfast_target_name(ntrg) = Trim(id)
+        cfast_target_compname(ntrg) = Trim(comp_id)
+     Case(1:)
+        Write(*,'(3(a))') 'ERROR: in reading DEVC-namelist record (file ', &
+             Trim(quote(filename)), ')'
+        Call error_read_file(filename)
+     End Select
+  End Do head_loop
+
+  Close(unit=iochannel(1))
+
+  If (ntrg == 0) Then
+     Write(*,'(2(a))') 'ERROR: no DEVC-namelist record found in file ', &
+          Trim(quote(filename))
+     Stop
+  End If
+
+End Subroutine parse_cfast_devc_namelist
+
+Subroutine parse_cfast_matl_namelist()
+!---------------------------------------------
+! Parse CFAST input file for MATL namelist
+!
+! Assigns values to the variables
+!   cfast_matl_epsilon,_name
+!---------------------------------------------
+  Use error_messages
+  Use cfast_arrays
+  Use global_constants  
+  Use global_variables, only : fds_input_file
+  Use string_handling
+  Implicit None
+
+  Integer :: ios,nmatl
+  Character(len=chr80) :: filename
+
+  ! MATL-namelist group
+  Character(64) :: id, material
+  Real(kind=eb) :: conductivity, density, emissivity, specific_heat, thickness
+  Namelist /matl/ conductivity, density, emissivity, id, material, specific_heat, thickness
+
+  filename = Trim(fds_input_file) // '.in'
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios) 
+  If (ios /= 0) Call error_open_file(filename)
+
+  ! Read in MATL-namelist records
+  nmatl=0
+  matl_loop: Do
+     Read(iochannel(1),nml=matl,iostat=ios)
+     Select Case(ios)
+     Case (:-1)
+        Exit matl_loop
+     Case (0)
+        nmatl=nmatl+1
+        cfast_matl_epsilon(nmatl) = emissivity
+        cfast_matl_name(   nmatl) = Trim(id)
+     Case(1:)
+        Write(*,'(3(a))') 'ERROR: in reading MATL-namelist record (file ', &
+             Trim(quote(filename)), ')'
+        Call error_read_file(filename)
+     End Select
+  End Do matl_loop
+
+  Close(unit=iochannel(1))
+
+  If (nmatl == 0) Then
+     Write(*,'(2(a))') 'ERROR: no MATL-namelist record found in file ', &
+          Trim(quote(filename))
+     Stop
+  End If
+
+End Subroutine parse_cfast_matl_namelist
+
+Subroutine parse_cfast_comp_namelist()
+!---------------------------------------------
+! Parse CFAST input file for COMP namelist
+!
+! Assigns values to the variables
+!   cfast_comp_xyz,_name
+!---------------------------------------------
+  Use error_messages
+  Use cfast_arrays
+  Use global_constants  
+  Use global_variables, only : fds_input_file
+  Use string_handling
+  Implicit None
+
+  Integer :: ios,ncomp
+  Character(len=chr80) :: filename
+
+  ! COMP-namelist group
+  integer,dimension(3) :: grid
+  real(eb) :: depth, height ,width
+  real(eb),dimension(3) :: origin
+  real(eb), dimension(200) :: cross_sect_areas, cross_sect_heights
+  ! integer, parameter :: mxpts = 200 ! maximum number of data points in a input curve/ramp ! Cfast source
+  ! real(eb), dimension(mxpts) :: cross_sect_areas, cross_sect_heights ! Cfast source
+  logical :: hall, shaft
+  character(64) :: id, ceiling_matl_id, floor_matl_id, wall_matl_id
+  Namelist /comp/ cross_sect_areas, cross_sect_heights, depth, grid, hall, height, id, &
+       ceiling_matl_id, floor_matl_id, wall_matl_id, origin, shaft, width
+
+  filename = Trim(fds_input_file) // '.in'
+  Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios) 
+  If (ios /= 0) Call error_open_file(filename)
+
+  ! Read in COMP-namelist records
+  ncomp=0
+  comp_loop: Do
+     Read(iochannel(1),nml=comp,iostat=ios)
+     Select Case(ios)
+     Case (:-1)
+        Exit comp_loop
+     Case (0)
+        ncomp=ncomp+1
+        cfast_comp_xyz(1,ncomp) = origin(1)
+        cfast_comp_xyz(2,ncomp) = origin(2)
+        cfast_comp_xyz(3,ncomp) = origin(3)
+        cfast_comp_name( ncomp) = Trim(id)
+     Case(1:)
+        Write(*,'(3(a))') 'ERROR: in reading COMP-namelist record (file ', &
+             Trim(quote(filename)), ')'
+        Call error_read_file(filename)
+     End Select
+  End Do comp_loop
+
+  Close(unit=iochannel(1))
+
+  If (ncomp == 0) Then
+     Write(*,'(2(a))') 'ERROR: no COMP-namelist record found in file ', &
+          Trim(quote(filename))
+     Stop
+  End If
+
+End Subroutine parse_cfast_comp_namelist
+
 Subroutine import_cfast_data()
 !-----------------------------------------------------------------------------
 ! Import data from the CFAST "_w.csv" file that contains target output
 ! Calculate T_ast if that is needed
 !  
-!  Columns:
+!  Columns: Old format   (cfast_old_format=T), validation output
 !    1st column:    Time(s)
 !    2nd-4*Ncomp+1: compatrment boundaries temperatures (_w: wall temperatures)
 !    then targets, 15 per one target 
 !  
-!  Rows:
+!  Columns: New format, normal output
+!    1st column:    Time(s)
+!    2nd-4*Ncomp+1: compatrment boundaries temperatures (_w: wall temperatures)
+!    then targets, 9 per one target 
+!TRGGAST_1       TRGSURT_1       TRGCENT_1       TRGFLXI_1       TRGFLXT_1       TRGFEDG_1       TRGDFEDG_1      TRGFEDH_1       TRGDFEDH_1
+! Target Surrounding Gas Temperature      Target Surface Temperature      Target Center Temperature       Target Incident Flux
+!                                                                Target Net Flux Target Gas FED  Target GasFED Increment Target Heat FED Target Heat FED Increment
+!DoorLeft        DoorLeft        DoorLeft        DoorLeft        DoorLeft        DoorLeft        DoorLeft        DoorLeft        DoorLeft
+!C               C               C               KW/m^2          KW/m^2                          
+!  
+!  Rows: Both old and new formats
 !    1st row: TargetQuantityLabel_#, #=target running index
 !    2nd row: Target quantity long name
 !    3rd row: CompName / TargetName (user can give these in CFAST)
@@ -328,20 +654,22 @@ Subroutine import_cfast_data()
   Implicit None
 
   Integer :: i,j,k,ios,n_targets,ibegin,iend,column,ndevc_files
-  character(len=chr80) :: filename
+  Character(len=chr80) :: filename
   Real(kind=rk) a_ast, b_ast, c_ast, eps_rflux_inc, m_ast, t_ast, alp_ast, bet_ast, gam_ast
   
-  character :: ctmp
-  character(len=input_line_length) :: input_line
-  character(len=chr20) :: quantity_label
+  Character :: ctmp
+  Character(len=input_line_length) :: input_line
+  Character(len=chr20) :: quantity_label
+  Logical :: cfast_valid_output
 
-  character(len=chr20), dimension(:), allocatable :: devc_name_tmp
-  character(len=chr20), dimension(:), allocatable :: devc_unit_tmp
-  character(len=chr20), dimension(:), allocatable :: devc_label_tmp
+  
+  Character(len=chr20), Dimension(:), Allocatable :: devc_name_tmp
+  Character(len=chr20), Dimension(:), Allocatable :: devc_unit_tmp
+  Character(len=chr20), Dimension(:), Allocatable :: devc_label_tmp
 
-  real(kind=rk), dimension(:,:), allocatable :: devc_data_tmp 
-  real(kind=rk), dimension(:,:), allocatable :: fds_devc_rflux
-  real(kind=rk), dimension(:,:), allocatable :: fds_devc_rloss
+  Real(kind=rk), Dimension(:,:), Allocatable :: devc_data_tmp 
+  Real(kind=rk), Dimension(:,:), Allocatable :: fds_devc_rflux
+  Real(kind=rk), Dimension(:,:), Allocatable :: fds_devc_rloss
 
   filename = find_single_cfast_file(fds_input_file)  ! fds_input_file = Cfast case name
   If (Trim(filename)=='') Then
@@ -364,17 +692,17 @@ Subroutine import_cfast_data()
    
   ! Error handling
   If (Sum(fds_devc_cols(1:ndevc_files))-ndevc_files == 0) Then
-     write(*,'(2(a))') 'ERROR: no records found in file ', Trim(quote(fds_devc_file(1)))
+     Write(*,'(2(a))') 'ERROR: no records found in file ', Trim(quote(fds_devc_file(1)))
      Stop
   End If
 
   If (Trim(transfer_quantity) == 'wall_temperature') Then
-     quantity_label = 'TRGSURT'
+     quantity_label = 'TRGSURT' ! New format: 2nd value
   Else If (Trim(transfer_quantity) == 'net_heat_flux') Then
-     quantity_label = 'TRGFLXT'
+     quantity_label = 'TRGFLXT' ! New format: 5th value
   Else If (Trim(transfer_quantity) == 'adiabatic_surface_temperature') Then
-     quantity_label = 'TRGGAST'  ! Gas temp at target location
-  End if
+     quantity_label = 'TRGGAST'  ! Gas temp at target location, New format: 1st value
+  End If
 
   ! Read in data from one or more CFAST _w.csf files (now just one file)
   csv_file_loop: Do i = 1, ndevc_files
@@ -386,18 +714,18 @@ Subroutine import_cfast_data()
      column = 1 ; devc_label_tmp=''; j = 1
      Read(iochannel(1),'(a)',iostat=ios) input_line
      If (ios /= 0) Call error_read_file(fds_devc_file(i))
-     If (len_trim(input_line) > input_line_length - 1) Then
+     If (len_Trim(input_line) > input_line_length - 1) Then
         Write(*,*)'ERROR: Too long header lines in CFAST target csv file'
         Stop
      End If
-     label_loop: Do k = 1, len_trim(input_line)
+     label_loop: Do k = 1, len_Trim(input_line)
         Read(input_line(k:k),'(a)',iostat=ios) ctmp
-        If (ctmp == ',') then
+        If (ctmp == ',') Then
            column = column + 1 ; j = 1
            Cycle label_loop
         End If
         ! Omit quotation marks
-        If (ctmp /= char(34) .And. ctmp /= char(39)) Then
+        If (ctmp /= Char(34) .And. ctmp /= Char(39)) Then
            If (j <= chr20) Then
               devc_label_tmp(column)(j:j) = input_line(k:k)
            End If
@@ -413,14 +741,14 @@ Subroutine import_cfast_data()
      Allocate(devc_name_tmp(fds_devc_cols(i)),stat=ios); Call error_allocate(ios)
      column = 1 ; devc_name_tmp=''; j = 1
      Read(iochannel(1),'(a)',iostat=ios) input_line
-     If (len_trim(input_line) > input_line_length - 1) Then
+     If (len_Trim(input_line) > input_line_length - 1) Then
         Write(*,*)'ERROR: Too long header lines in CFAST target csv file'
         Stop
      End If
      If (ios /= 0) Call error_read_file(fds_devc_file(i))
-     ids_loop: Do k = 1, len_trim(input_line)
+     ids_loop: Do k = 1, len_Trim(input_line)
         Read(input_line(k:k),'(a)',iostat=ios) ctmp
-        If (ctmp == ',') then
+        If (ctmp == ',') Then
            column = column + 1 ; j = 1
            Cycle ids_loop
         End If
@@ -434,12 +762,12 @@ Subroutine import_cfast_data()
      Allocate(devc_unit_tmp(fds_devc_cols(i)),stat=ios); Call error_allocate(ios)
      column=1; devc_unit_tmp=''; j=1
      Read(iochannel(1),'(a)',iostat=ios) input_line
-     If (len_trim(input_line) > input_line_length - 1) Then
+     If (len_Trim(input_line) > input_line_length - 1) Then
         Write(*,*)'ERROR: Too long header lines in CFAST target csv file'
         Stop
      End If
      If (ios /= 0) Call error_read_file(fds_devc_file(i))
-     units_loop: Do k = 1, len_trim(input_line)
+     units_loop: Do k = 1, len_Trim(input_line)
         Read(input_line(k:k),'(a)',iostat=ios) ctmp
         If (ctmp == ',') Then
            column = column + 1 ; j = 1
@@ -452,9 +780,9 @@ Subroutine import_cfast_data()
      End Do units_loop
 
      ! ---> Exception handling <---
-     If (Trim(devc_unit_tmp(1)) /= 's') then
+     If (Trim(devc_unit_tmp(1)) /= 's') Then
         Write(*,'(2(a))') 'WARNING: non-standard time units in CFAST csv file ', &
-             trim(quote(fds_devc_file(i)))
+             Trim(quote(fds_devc_file(i)))
      End If
      
      ! Time series
@@ -466,12 +794,21 @@ Subroutine import_cfast_data()
      ! ---------------------------- 
      ! Count the number of different CFAST targets, use _w.csv file information
      n_targets = 0
+     cfast_valid_output = .FALSE.
      Do j = 2, fds_devc_cols(1)
         If (devc_label_tmp(j)(1:7) == 'TRGGAST') Then
            n_targets = n_targets + 1
         End If
+        If (devc_label_tmp(j)(1:7) == 'TRGFLXR') Then
+           cfast_valid_output = .TRUE.
+        End If
      End Do
-
+     If (cfast_valid_output)  Then
+        Write(*,'(t3,a,a)') 'Cfast validation output detected, file: ',Trim(filename)
+     Else
+        Write(*,'(t3,a,a)') 'Cfast normal output detected, file: ',Trim(filename)
+     End If
+     
      If (n_targets /= Ubound(cfast_target_name,1)) Then
         Write(*,*)'ERROR: Different number of targets in CFAST input file vs csv file'
         Stop
@@ -498,12 +835,21 @@ Subroutine import_cfast_data()
               fds_devc_name_b(k) = devc_label_tmp(j) ! label
               fds_devc_name(k)   = devc_name_tmp(j)  ! target name
               fds_devc_data(1:fds_devc_rows(1),k) = devc_data_tmp(1:fds_devc_rows(1),j)
-              If (Trim(transfer_quantity) == 'adiabatic_surface_temperature') Then
+              If (Trim(transfer_quantity) == 'adiabatic_surface_temperature' .and. cfast_valid_output) Then
                  fds_devc_rflux(1:fds_devc_rows(1),k) = devc_data_tmp(1:fds_devc_rows(1),j+5)
                  fds_devc_rloss(1:fds_devc_rows(1),k) = devc_data_tmp(1:fds_devc_rows(1),j+10)
+                 ! Old format: (actually, validation output)
                  ! T_gas                                            rad.flux                                          rad.loss
                  !   1         2        3         4         5          6        7         8         9         10        11
                  !TRGGAST_1,TRGSURT_1,TRGCENT_1,TRGFLXI_1,TRGFLXT_1,TRGFLXR_1,TRGFLXC_1,TRGFLXF_1,TRGFLXS_1,TRGFLXG_1,TRGFLXRE_1
+              End If
+              If (Trim(transfer_quantity) == 'adiabatic_surface_temperature' .And. .Not.cfast_valid_output) Then
+                 fds_devc_rflux(1:fds_devc_rows(1),k) = devc_data_tmp(1:fds_devc_rows(1),j+3)
+                 fds_devc_rloss(1:fds_devc_rows(1),k) = 0.0
+                 ! New format: (actually, normal output, not validation output)
+                 ! T_gas                        inc.rad.flux
+                 !   1         2        3         4         5          6        7         8         9 
+                 ! TRGGAST_1 TRGSURT_1 TRGCENT_1 TRGFLXI_1 TRGFLXT_1 TRGFEDG_1 TRGDFEDG_1 TRGFEDH_1 TRGDFEDH_1
               End If
               If (Trim(fds_devc_name(k)) /= Trim(cfast_target_name(k))) Then
                  Write(*,*)'ERROR: Different name of targets in CFAST input file vs csv file'
@@ -517,17 +863,17 @@ Subroutine import_cfast_data()
         Write(*,'(a)')'ERROR: CFAST Target input can use only one input _w.csv file'
         Stop
         ! Omit the time vector
-        ibegin = 2 - i + sum(fds_devc_cols(1:i-1)) ; iend = ibegin + fds_devc_cols(i) - 2
+        ibegin = 2 - i + Sum(fds_devc_cols(1:i-1)) ; iend = ibegin + fds_devc_cols(i) - 2
         fds_devc_unit(ibegin:iend)   = devc_unit_tmp(2:fds_devc_cols(i))
         fds_devc_name_b(ibegin:iend) = devc_label_tmp(2:fds_devc_cols(i))
         fds_devc_name(ibegin:iend)   = devc_name_tmp(2:fds_devc_cols(i))
         fds_devc_data(1:fds_devc_rows(i),ibegin:iend) = devc_data_tmp(1:fds_devc_rows(i),2:fds_devc_cols(i))
      End If
 
-     Deallocate(devc_data_tmp,stat=ios); call error_allocate(ios)
-     Deallocate(devc_unit_tmp,stat=ios); call error_allocate(ios)
-     Deallocate(devc_name_tmp,stat=ios); call error_allocate(ios)
-     Deallocate(devc_label_tmp,stat=ios); call error_allocate(ios)
+     Deallocate(devc_data_tmp,stat=ios); Call error_allocate(ios)
+     Deallocate(devc_unit_tmp,stat=ios); Call error_allocate(ios)
+     Deallocate(devc_name_tmp,stat=ios); Call error_allocate(ios)
+     Deallocate(devc_label_tmp,stat=ios); Call error_allocate(ios)
 
      Close(unit=iochannel(1))
 
@@ -536,6 +882,8 @@ Subroutine import_cfast_data()
            ! Stefan-Boltzmann https://physics.nist.gov/cuu/Constants/, Source: 2014 CODATA 5.670367 E-8
            fds_devc_rloss(1,j) = -0.001*cfast_target_epsilon(j)*5.670367E-8*((fds_devc_data(1,j)+273.15)**4) ! t=0 correction, kW/m2
            ast_row_loop: Do k = 1, fds_devc_rows(1)
+              ! New format: Target Incident flux (=rad.inc.flux), so this is easy
+              ! Below old format: net rad flux and rad loss are in the _w.csv file (validation output):
               eps_rflux_inc = 1000.0*(fds_devc_rflux(k,j) - fds_devc_rloss(k,j)) ! CFAST rloss is negative
               a_ast   = cfast_target_epsilon(j)*5.670367E-8
               b_ast   = hcoeff ! W/m2.K, default, no target specific information available
@@ -558,26 +906,26 @@ Subroutine filter_cfast_data
 !-------------------------------
 ! Filter unwanted CFAST csv data
 !-------------------------------
-  use error_messages
-  use fds_devc_arrays
-  use fds_head_arrays
-  use global_constants
-  use global_variables
-  use mapping_arrays
-  use string_handling
+  Use error_messages
+  Use fds_devc_arrays
+  Use fds_head_arrays
+  Use global_constants
+  Use global_variables
+  Use mapping_arrays
+  Use string_handling
   Use cfast_arrays
-  implicit none
+  Implicit None
 
-  integer :: i,j,ios,idevc,ndevc,inode,nrows,ncols
-  integer :: ndevc_user, quantity_label_len
+  Integer :: i,j,ios,idevc,ndevc,inode,nrows,ncols
+  Integer :: ndevc_user, quantity_label_len
 
-  integer :: devc_number
-  logical :: devc_found
+  Integer :: devc_number
+  Logical :: devc_found
 
-  logical, dimension(:), allocatable :: devc_mask_user
+  Logical, Dimension(:), Allocatable :: devc_mask_user
 
-  character(len=chr80) :: fds_transfer_quantity
-  character(len=chr20) :: quantity_label
+  Character(len=chr80) :: fds_transfer_quantity
+  Character(len=chr20) :: quantity_label
 
   !---------------------------
   ! Assign a transfer quantity
@@ -595,7 +943,7 @@ Subroutine filter_cfast_data
      fds_transfer_quantity='adiabatic surface temperature'
      quantity_label = 'TRGSURT'
      quantity_label_len = 7
-  End if
+  End If
 
   !-----------------------------------------------
   ! Convert connectivity table into numerical form
@@ -628,11 +976,11 @@ Subroutine filter_cfast_data
              End If
         
           Else
-             devc_found = .false.
+             devc_found = .False.
              devc_loop_0: Do idevc = 1, Ubound(fds_devc_name,1)
                 If (Trim(connectivity_table(i,j)) == Trim(fds_devc_name(idevc))) Then
                    connectivity_table_num(i,j) = idevc  ! Target index
-                   devc_found = .true.
+                   devc_found = .True.
                 End If
              End Do devc_loop_0
 
@@ -645,8 +993,8 @@ Subroutine filter_cfast_data
 
           End If
 
-      end Do col_loop_0
-    end Do row_loop_0
+      End Do col_loop_0
+    End Do row_loop_0
 
  Else
     Write(*,'(a)')'ERROR: CFAST input needs nset connectivity mode'
@@ -663,7 +1011,7 @@ Subroutine filter_cfast_data
   If (nset_connectivity) Then
 
      ! Based on user selection: Are the targets found in the nset file?
-     ndevc_user = 0; devc_mask_user = .false.
+     ndevc_user = 0; devc_mask_user = .False.
      devc_loop_2: Do idevc = 1, ndevc
 
         row_loop_2: Do i = 1, Ubound(connectivity_table,1)
@@ -671,13 +1019,13 @@ Subroutine filter_cfast_data
               If (connectivity_table(i,j) == '') Cycle col_loop_2
               If (numerical(connectivity_table(i,j))) Then
                  If (str2int(connectivity_table(i,j)) == idevc) Then
-                    devc_mask_user(idevc) = .true. ! This target is used
+                    devc_mask_user(idevc) = .True. ! This target is used
                     ndevc_user = ndevc_user + 1
                     Cycle devc_loop_2
                  End If
               Else
                  If (Trim(connectivity_table(i,j)) == Trim(fds_devc_name(idevc))) Then
-                    devc_mask_user(idevc) = .true.
+                    devc_mask_user(idevc) = .True.
                     ndevc_user = ndevc_user + 1 ! This target is used
                     Cycle devc_loop_2
                  End If
@@ -714,7 +1062,7 @@ Subroutine filter_cfast_data
   Allocate(fds_time(ntimes_fds),stat=ios);            Call error_allocate(ios)
   Allocate(fds_idevc(nnodes_fds),stat=ios);           Call error_allocate(ios)
   Allocate(fds_data(ntimes_fds,nnodes_fds),stat=ios); Call error_allocate(ios)
-  allocate(fds_xyz(nnodes_fds,3),stat=ios);           call error_allocate(ios)
+  Allocate(fds_xyz(nnodes_fds,3),stat=ios);           Call error_allocate(ios)
   Allocate(fds_ior(nnodes_fds),stat=ios);             Call error_allocate(ios)
   fds_ior = 0
   
@@ -745,24 +1093,24 @@ Subroutine filter_cfast_data
 
 End Subroutine filter_cfast_data
 
-Function find_single_cfast_file(chid) result(filename)
+Function find_single_cfast_file(chid) Result(filename)
 !--------------------------------
 ! Find a single CFAST _w.csv file
 !--------------------------------
-  use global_constants
-  use string_handling
-  implicit none
+  Use global_constants
+  Use string_handling
+  Implicit None
 
-  logical :: file_exists
-  character(len=chr40) :: chid
-  character(len=chr80) :: filename
+  Logical :: file_exists
+  Character(len=chr40) :: chid
+  Character(len=chr80) :: filename
 
   filename = Trim(chid) // '_w.csv'
 
-  inquire(file=filename,exist=file_exists)
-  if (.not. file_exists) filename=''
+  Inquire(file=filename,exist=file_exists)
+  If (.Not. file_exists) filename=''
 
-end function find_single_cfast_file
+End Function find_single_cfast_file
 
 
 !***********************************************************

@@ -584,9 +584,14 @@ Module cfast_arrays
   Use global_constants
   Implicit none
 
+  ! HEAD namelist data
+  Integer :: cfast_version
+  Character(128) :: cfast_title
+
   Real(kind=rk), Dimension(:,:), Allocatable :: cfast_target_xyz, cfast_comp_xyz, cfast_target_ior
   Real(kind=rk), Dimension(:), Allocatable :: cfast_matl_epsilon, cfast_target_epsilon
   Character(len=chr20), Dimension(:), Allocatable :: cfast_target_name, cfast_target_matl, cfast_matl_name
+  Character(len=chr20), Dimension(:), Allocatable :: cfast_target_compname, cfast_comp_name
   Integer, Dimension(:), Allocatable :: cfast_target_comp
 
 End Module cfast_arrays
