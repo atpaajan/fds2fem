@@ -4,8 +4,8 @@ INST_DIR=$(HOME)/bin
 
 # Compilation instructions
 
-FC= ifort
-FFLAGS= -free -O3 -traceback
+FC= gfortran
+FFLAGS= -free -ffree-line-length-512 -O3
 LDFLAGS=
 OBJ= global.o string.o error.o misc.o math.o cfg_reader.o fds_dump.o fds_reader.o cfast_dump.o iso_reader.o \
 		 fds_stats.o fem_dump.o fem_stats.o abaqus_reader.o abaqus_output.o \
