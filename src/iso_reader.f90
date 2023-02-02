@@ -1079,12 +1079,12 @@ Subroutine filter_cfast_data
       fds_xyz(inode,:)             = cfast_target_xyz(:,idevc)
       ! Note: Next is not working generally, it assumes "FDS type" normal vector
       !       nx,ny,nz should be in the x,y, or z direction
-      If (Abs(cfast_target_ior(1,idevc) > 0.5)) Then
-         fds_ior(inode) = Nint(Sign(1.0,cfast_target_ior(1,idevc)))
-      Else If (Abs(cfast_target_ior(2,idevc) > 0.5)) Then
-         fds_ior(inode) = Nint(Sign(2.0,cfast_target_ior(2,idevc)))
-      Else If (Abs(cfast_target_ior(3,idevc) > 0.5)) Then
-         fds_ior(inode) = Nint(Sign(3.0,cfast_target_ior(3,idevc)))
+      If (Abs(cfast_target_ior(1,idevc)) > 0.5) Then
+         fds_ior(inode) = Nint(Sign(1.0_rk,cfast_target_ior(1,idevc)))
+      Else If (Abs(cfast_target_ior(2,idevc)) > 0.5) Then
+         fds_ior(inode) = Nint(Sign(2.0_rk,cfast_target_ior(2,idevc)))
+      Else If (Abs(cfast_target_ior(3,idevc)) > 0.5) Then
+         fds_ior(inode) = Nint(Sign(3.0_rk,cfast_target_ior(3,idevc)))
       End If
       inode = inode + 1
     End If  
