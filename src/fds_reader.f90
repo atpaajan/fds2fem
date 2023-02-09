@@ -600,7 +600,7 @@ subroutine parse_fds_mesh_namelist
   real(kind=rk) :: evac_z_offset
   real(kind=rk), dimension(6) :: xb
 
-  ijk=0; xb=0.0; fds_mesh_ijk=0; fds_mesh_xb=0.0
+  ijk=0; xb=0.0
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
   if (ios /= 0) call error_open_file(fds_input_file)
 
