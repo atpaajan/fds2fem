@@ -21,7 +21,7 @@
 fds_input  room.fds
 fem_input  door.inp
 fem_mode   abaqus
-fds_output devc
+fds_output bndf
 
 # emissivity and heat transfer coefficient are needed, if T_ast transfered
 e_coeff  0.9

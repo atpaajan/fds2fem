@@ -14,7 +14,7 @@ fds2fem options (transfered quantity, bndf/devc data).
 &HEAD CHID='fds_tc1_1', TITLE='Metal-insulator chess board' /
 &MESH XB= -0.5,0.5,-0.5,0.5,0.0,0.7, IJK=20,20,20 /
 &TIME T_END=600.0 /
-&DUMP NFRAMES=100., DT_BNDF = 15./
+&DUMP NFRAMES=100, DT_BNDF = 15./
 /setting the implicit boundary file output for all surfaces off.
 /just those surfaces that the user wants to import to a FEM code
 /should be used to generate the BNDF output.
