@@ -642,6 +642,7 @@ subroutine parse_fds_mesh_namelist
 
   allocate(fds_mesh_ijk(nmesh,3),stat=ios); call error_allocate(ios)
   allocate(fds_mesh_xb(nmesh,6),stat=ios);  call error_allocate(ios)
+  fds_mesh_ijk=0; fds_mesh_xb=0
 
   ! Read in MESH-namelist records
   do i=1,nmesh
@@ -1598,15 +1599,10 @@ subroutine locate_bndf_files()
 
   do ibndf=1,nbndf
     do imesh=1,nmesh
+        
+      write(filename,'(a,a,g0,a,g0,a)') trim(fds_chid), &
+        '_', imesh, '_', ibndf, '.bf'
       
-      if (nmesh > 1) then
-        write(filename,'(a,a,i4.4,a,i2.2,a)') trim(fds_chid), &
-            '_', imesh, '_', ibndf, '.bf'
-      else
-        write(filename,'(a,a,i2.2,a)') trim(fds_chid), &
-            '_', ibndf, '.bf'
-      end if
-    
       inquire(file=filename,exist=file_exists)
       if (.not. file_exists) then
         write(*,'(3(a))') 'ERROR: BNDF file ', &
