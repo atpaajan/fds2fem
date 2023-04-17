@@ -382,13 +382,13 @@ Subroutine parse_cfast_head_namelist()
   Use string_handling
   Implicit None
 
-  Integer :: ios,nhead
-  Character(len=chr80) :: filename
+  integer :: ios,nhead
+  character(len=chr80) :: filename
 
   ! HEAD-namelist group
-  Namelist /head/ version,title
-  Integer :: version
-  Character(128) :: title
+  integer :: version
+  character(128) :: title
+  namelist /head/ version,title
 
   filename = Trim(fds_input_file) // '.in'
   version=0; title=''
@@ -510,13 +510,13 @@ Subroutine parse_cfast_matl_namelist()
   Use string_handling
   Implicit None
 
-  Integer :: ios,nmatl
-  Character(len=chr80) :: filename
+  integer :: ios,nmatl
+  character(len=chr80) :: filename
 
   ! MATL-namelist group
-  Character(64) :: id, material
-  Real(kind=eb) :: conductivity, density, emissivity, specific_heat, thickness
-  Namelist /matl/ conductivity, density, emissivity, id, material, specific_heat, thickness
+  character(64) :: id, material
+  real(kind=eb) :: conductivity, density, emissivity, specific_heat, thickness
+  namelist /matl/ conductivity, density, emissivity, id, material, specific_heat, thickness
 
   filename = Trim(fds_input_file) // '.in'
   Open(unit=iochannel(1),file=Trim(filename),status='old',iostat=ios) 

@@ -186,10 +186,11 @@ subroutine parse_fds_bndf_namelist()
   integer :: i,ios,nbndf
 
   ! BNDF-namelist group
-  namelist /bndf/ cell_centered,fyi,part_id,prop_id,quantity,recount_drip,spec_id
   logical :: cell_centered,recount_drip
   character(len=30) quantity,part_id,prop_id,spec_id
   character(len=100) :: fyi
+  
+  namelist /bndf/ cell_centered,fyi,part_id,prop_id,quantity,recount_drip,spec_id
 
   if (trim(lowercase(fds_output)) /= 'bndf') return
 
@@ -260,13 +261,6 @@ subroutine parse_fds_devc_namelist()
   logical :: xyz_given,xb_given,identical
 
   ! DEVC-namelist group
-  namelist /devc/ bypass_flowrate,conversion_factor,ctrl_id,delay,depth,devc_id,&
-                  dry,duct_id,evacuation,flowrate,fyi,hide_coordinates,id,&
-                  initial_state,ior,latch,matl_id,node_id,orientation,output,&
-                  part_id,points,prop_id,quantity,relative,rotation,setpoint,&
-                  smoothing_factor,spec_id,statistics,surf_id,time_averaged,&
-                  trip_direction,units,velo_index,virtual_index,xb,xyz,x_id,&
-                  y_id,z_id
   integer :: ior,points,trip_direction,velo_index,virtual_index
   logical :: dry,evacuation,hide_coordinates,initial_state,latch,output,relative,&
              time_averaged
@@ -278,6 +272,14 @@ subroutine parse_fds_devc_namelist()
                        spec_id,statistics,surf_id,units,x_id,y_id,z_id
   character(len=chr30), dimension(2) :: node_id
   character(len=chr100) :: fyi
+  
+  namelist /devc/ bypass_flowrate,conversion_factor,ctrl_id,delay,depth,devc_id,&
+                  dry,duct_id,evacuation,flowrate,fyi,hide_coordinates,id,&
+                  initial_state,ior,latch,matl_id,node_id,orientation,output,&
+                  part_id,points,prop_id,quantity,relative,rotation,setpoint,&
+                  smoothing_factor,spec_id,statistics,surf_id,time_averaged,&
+                  trip_direction,units,velo_index,virtual_index,xb,xyz,x_id,&
+                  y_id,z_id
 
   if (trim(lowercase(fds_output)) /= 'devc') return
 
@@ -463,13 +465,6 @@ subroutine parse_fds_dump_namelist()
 
   integer :: ios,ndump
 
-  namelist /dump/ column_dump_limit,ctrl_column_limit,cutcell_data_file,&
-                  debug,devc_column_limit,dt_bnde,dt_bndf,dt_ctrl,dt_devc,dt_devc_line,dt_flush,&
-                  dt_geom,dt_hrr,dt_isof,dt_mass,dt_part,dt_pl3d,dt_prof,dt_restart,dt_sl3d,dt_slcf,&
-                  dt_veg,flush_file_buffers,mass_file,maximum_particles,nframes,plot3d_part_id,&
-                  plot3d_quantity,plot3d_spec_id,plot3d_velo_index,render_file,sig_figs,sig_figs_exp,&
-                  smoke3d,smoke3d_quantity,smoke3d_spec_id,status_files,timing,uvw_timer,&
-                  velocity_error_file,write_xyz
   integer :: ctrl_column_limit,devc_column_limit,sig_figs,sig_figs_exp,maximum_particles,&
              nframes,plot3d_velo_index
   logical :: debug,flush_file_buffers,smoke3d,timing,mass_file,velocity_error_file,write_xyz,status_files,&
@@ -479,6 +474,14 @@ subroutine parse_fds_dump_namelist()
   character(len=chr30), dimension(3) :: plot3d_part_id,plot3d_quantity,plot3d_spec_id
   real(kind=eb) :: dt_bnde,dt_bndf,dt_ctrl,dt_devc,dt_devc_line,dt_flush,dt_geom,dt_hrr,dt_isof,dt_mass,&
                    dt_part,dt_pl3d,dt_prof,dt_restart,dt_sl3d,dt_slcf,dt_veg,uvw_timer
+  
+  namelist /dump/ column_dump_limit,ctrl_column_limit,cutcell_data_file,&
+                  debug,devc_column_limit,dt_bnde,dt_bndf,dt_ctrl,dt_devc,dt_devc_line,dt_flush,&
+                  dt_geom,dt_hrr,dt_isof,dt_mass,dt_part,dt_pl3d,dt_prof,dt_restart,dt_sl3d,dt_slcf,&
+                  dt_veg,flush_file_buffers,mass_file,maximum_particles,nframes,plot3d_part_id,&
+                  plot3d_quantity,plot3d_spec_id,plot3d_velo_index,render_file,sig_figs,sig_figs_exp,&
+                  smoke3d,smoke3d_quantity,smoke3d_spec_id,status_files,timing,uvw_timer,&
+                  velocity_error_file,write_xyz
 
   column_dump_limit=.true.; devc_column_limit=254
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
@@ -522,8 +525,9 @@ subroutine parse_fds_head_namelist()
   integer :: ios,nhead
 
   ! HEAD-namelist group
-  namelist /head/ chid,title,fyi
   character(len=chr40) :: chid,title,fyi
+  
+  namelist /head/ chid,title,fyi
 
   chid=''; title=''; fyi=''
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
@@ -588,9 +592,6 @@ subroutine parse_fds_mesh_namelist
   integer :: i,ios,nmesh
  
   ! MESH-namelist group
-  namelist /mesh/ color,cylindrical,evacuation,evac_humans,&
-                  evac_z_offset,fyi,id,ijk,level,mpi_process,&
-                  mult_id,rgb,synchronize,xb
   integer :: level,mpi_process
   integer, dimension(3) :: ijk,rgb
   logical :: cylindrical,evacuation,evac_humans,synchronize
@@ -599,6 +600,10 @@ subroutine parse_fds_mesh_namelist
   character(len=chr100) :: fyi
   real(kind=rk) :: evac_z_offset
   real(kind=rk), dimension(6) :: xb
+  
+  namelist /mesh/ color,cylindrical,evacuation,evac_humans,&
+                  evac_z_offset,fyi,id,ijk,level,mpi_process,&
+                  mult_id,rgb,synchronize,xb
 
   ijk=0; xb=0.0
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
@@ -687,11 +692,6 @@ subroutine parse_fds_obst_namelist()
   integer :: i,ios,nobst
   
   ! MESH-namelist group
-  namelist /obst/ allow_vent,bndf_face,bndf_obst,bulk_density,color,ctrl_id,devc_id,&
-                  evacuation,fyi,id,mesh_id,mult_id,noterrain,outline,permit_hole,prop_id,&
-                  removable,rgb,sawtooth,surf_id,surf_id6,surf_ids,texture_origin,thicken,&
-                  transparency,xb
-
   integer, dimension(3) :: rgb
             
   logical :: sawtooth,thicken,permit_hole,allow_vent,evacuation, removable,bndf_obst,outline,noterrain
@@ -708,6 +708,12 @@ subroutine parse_fds_obst_namelist()
   real(kind=eb) :: transparency,bulk_density
   real(kind=eb), dimension(3) :: texture_origin
   real(kind=eb), dimension(6) :: xb
+  
+  namelist /obst/ allow_vent,bndf_face,bndf_obst,bulk_density,color,ctrl_id,devc_id,&
+                  evacuation,fyi,id,mesh_id,mult_id,noterrain,outline,permit_hole,prop_id,&
+                  removable,rgb,sawtooth,surf_id,surf_id6,surf_ids,texture_origin,thicken,&
+                  transparency,xb
+
 
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
   if (ios /= 0) call error_open_file(fds_input_file)
@@ -781,16 +787,6 @@ subroutine parse_fds_prop_namelist()
   integer :: i,ios,nprop
 
   ! PROP-namelist group
-  namelist /prop/ activation_obscuration,activation_temperature,alpha_c,alpha_e, &
-                  bead_density,bead_diameter,bead_emissivity,bead_h_fixed,bead_specific_heat, &
-                  beta_c,beta_e,cable_diameter,cable_failure_temperature,cable_jacket_thickness, &
-                  cable_mass_per_length,characteristic_velocity,conduit_diameter,conduit_thickness, &
-                  c_factor,particles_per_second,particle_velocity,flow_ramp,flow_rate,flow_tau, &
-                  gauge_temperature,id,initial_temperature,k_factor,length,offset,operating_pressure, &
-                  orifice_diameter,p0,part_id,pdpa_end,pdpa_histogram,pdpa_histogram_limits,pdpa_histogram_nbins, &
-                  pdpa_integrate,pdpa_m,pdpa_n,pdpa_normalize,pdpa_radius,pdpa_start,pressure_ramp,px,pxx,quantity, &
-                  rti,smokeview_id,smokeview_parameters,spec_id,spray_angle,spray_pattern_beta,spray_pattern_mu, &
-                  spray_pattern_shape,spray_pattern_table,velocity_component
   integer :: pdpa_m,pdpa_n,particles_per_second,velocity_component,pdpa_histogram_nbins         
   logical :: pdpa_integrate,pdpa_normalize,pdpa_histogram
   character(len=chr30) :: quantity,part_id,flow_ramp,spray_pattern_table,spec_id,id, &
@@ -807,6 +803,17 @@ subroutine parse_fds_prop_namelist()
   real(kind=eb), dimension(3) :: px
   real(kind=eb), dimension(2,2) :: spray_angle
   real(kind=eb), dimension(3,3) :: pxx
+
+  namelist /prop/ activation_obscuration,activation_temperature,alpha_c,alpha_e, &
+                  bead_density,bead_diameter,bead_emissivity,bead_h_fixed,bead_specific_heat, &
+                  beta_c,beta_e,cable_diameter,cable_failure_temperature,cable_jacket_thickness, &
+                  cable_mass_per_length,characteristic_velocity,conduit_diameter,conduit_thickness, &
+                  c_factor,particles_per_second,particle_velocity,flow_ramp,flow_rate,flow_tau, &
+                  gauge_temperature,id,initial_temperature,k_factor,length,offset,operating_pressure, &
+                  orifice_diameter,p0,part_id,pdpa_end,pdpa_histogram,pdpa_histogram_limits,pdpa_histogram_nbins, &
+                  pdpa_integrate,pdpa_m,pdpa_n,pdpa_normalize,pdpa_radius,pdpa_start,pressure_ramp,px,pxx,quantity, &
+                  rti,smokeview_id,smokeview_parameters,spec_id,spray_angle,spray_pattern_beta,spray_pattern_mu, &
+                  spray_pattern_shape,spray_pattern_table,velocity_component
 
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
   if (ios /= 0) call error_open_file(fds_input_file)
@@ -872,10 +879,11 @@ subroutine parse_fds_trnx_namelist()
   integer :: ios,ntrnx
 
   ! TRNX-namelist group
-  namelist /trnx/ cc,fyi,ideriv,mesh_number,pc
   integer :: ideriv,mesh_number
   character(len=chr100) :: fyi
   real(kind=eb) :: pc,cc
+  
+  namelist /trnx/ cc,fyi,ideriv,mesh_number,pc
 
   ideriv=0; mesh_number=0; pc=0.0; cc=0.0; fyi=''
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
@@ -920,10 +928,11 @@ subroutine parse_fds_trny_namelist()
   integer :: ios,ntrny
 
   ! TRNY-namelist group
-  namelist /trny/ cc,fyi,ideriv,mesh_number,pc
   integer :: ideriv,mesh_number
   character(len=chr100) :: fyi
   real(kind=eb) :: pc,cc
+  
+  namelist /trny/ cc,fyi,ideriv,mesh_number,pc
 
   ideriv=0; mesh_number=0; pc=0.0; cc=0.0; fyi=''
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 
@@ -968,10 +977,11 @@ subroutine parse_fds_trnz_namelist()
   integer :: ios,ntrnz
 
   ! TRNZ-namelist group
-  namelist /trnz/ cc,fyi,ideriv,mesh_number,pc
   integer :: ideriv,mesh_number
   character(len=chr100) :: fyi
   real(kind=eb) :: pc,cc
+  
+  namelist /trnz/ cc,fyi,ideriv,mesh_number,pc
 
   ideriv=0; mesh_number=0; pc=0.0; cc=0.0; fyi=''
   open(unit=iochannel(1),file=trim(fds_input_file),status='old',iostat=ios) 

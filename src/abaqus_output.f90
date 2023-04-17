@@ -199,6 +199,17 @@ subroutine dump_abaqus_amplitudes()
       write(iochannel(1),'(es15.7e3,a,es15.7e3)') fem_time(ntimes_fem), ', ', fem_hcoeff(ntimes_fem,j)
     end do
   end if
+  
+  !   if (cooling_hcoeff) then 
+  !	! Provide user defined heat transfer coefficients for the specified nset   
+  !	     do j=1,nnodes_fem		 
+  !	      write(iochannel(1),'(2(a))') '*Amplitude, name=AMP-H-', trim(int2str(j)) 
+  !	      do k=1,ntimes_fem-1
+  !	        write(iochannel(1),'(es15.7e3,a,es15.7e3,a)') fem_time(k), ', ', fem_hcoeff(k,j), ','
+  !	      end do
+  !	      write(iochannel(1),'(es15.7e3,a,es15.7e3)') fem_time(ntimes_fem), ', ', fem_hcoeff(ntimes_fem,j)
+  !	    end do	
+  ! end if
 
   close(unit=iochannel(1))
 
@@ -423,23 +434,38 @@ subroutine dump_abaqus_cradiate()
   use error_messages
   use global_constants
   use global_variables
+  use abaqus_arrays
   use mapping_arrays
   use string_handling
   implicit none
 
-  integer :: i,j,ios,nlines
+  integer :: i,j,ios,nlines, l1,l2, cidx
   logical :: omit_lines,replace
-  character(len=chr80) :: cradiate_file
-  character(len=input_line_length) :: keyword,input_line
+  character(len=chr80) :: cradiate_file, k
+  character(len=input_line_length) :: keyword,input_line, inst_name
   character(len=input_line_length), dimension(:), allocatable :: abaqus_input
 
   cradiate_file=trim(fem_input_file) // '.cradiate'
   open(unit=iochannel(1),file=trim(cradiate_file),status='replace',iostat=ios)
   if (ios /= 0) call error_open_file(cradiate_file)
-
+  
+  
+ 
   do j=1,nnodes_fem
+
+! my edit begins here. Also added are the declarations of variables l1, l2, cidx, k and isnt_name.
+
+     input_line = adjustl(fem_node_name(j)) !get the node name.
+     cidx = index(input_line, '.')
+     inst_name = input_line(1:cidx-1)  ! finding the instance name
+     l1=len(trim(inst_name))
+     l2 = len(trim(input_line))
+     k = input_line(l1+2:l2)  ! finding the corresponding node number
+	 
+! my edit ends here
+	 
     write(iochannel(1),'(3(a))') '** Name: Cradiate-BC-', trim(int2str(j)), ' Type: Radiative heat flux'
-    write(iochannel(1),'(2(a))') '*Cradiate, amplitude=AMP-', trim(int2str(j)) 
+    write(iochannel(1),'(2(a))') '*Cradiate, amplitude=AMP-', trim(k) 
     write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', abaqus_node_emissivity(j)
   end do
 
@@ -546,12 +572,13 @@ subroutine dump_abaqus_cfilm()
   use global_variables
   use mapping_arrays
   use string_handling
+  use abaqus_arrays
   implicit none
 
-  integer :: i,j,ios,nlines
+  integer :: i,j,ios,nlines, l1, l2, cidx
   logical :: omit_lines,replace
-  character(len=chr80) :: cfilm_file
-  character(len=input_line_length) :: keyword,input_line
+  character(len=chr80) :: cfilm_file, k
+  character(len=input_line_length) :: keyword,input_line, inst_name
   character(len=input_line_length), dimension(:), allocatable :: abaqus_input
 
   cfilm_file=trim(fem_input_file) // '.cfilm'
@@ -566,6 +593,22 @@ subroutine dump_abaqus_cfilm()
       write(iochannel(1),'(2(a),es15.7e3,a)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, 1.0'
     end do
 
+!   else if (cooling_hcoeff) then	! Heat transfer coefficient provided for a specifc nset
+!	    do j=1,nnodes_fem
+!
+!! my edit begins here		   
+!	       input_line = adjustl(fem_node_name(j)) !get the node name.
+!	       cidx = index(input_line, '.')
+!	       inst_name = input_line(1:cidx-1)  ! finding the instance name
+!	       l1=len(trim(inst_name))
+!	       l2 = len(trim(input_line))
+!	       k = input_line(l1+2:l2)  ! finding the corresponding node number
+!! my edit ends here
+!		   
+!        write(iochannel(1),'(3(a))') '** Name: Cfilm-BC-', trim(int2str(j)), ' Type: Convective heat flux'
+!	    write(iochannel(1),'(4(a))') '*Cfilm, amplitude=AMP-', trim(k), ', film amplitude=AMP-H-', trim(k)
+!	    write(iochannel(1),'(2(a),es15.7e3,a)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, 1.0'
+!        end do
   else
     ! Constant heat transfer coefficient
     do j=1,nnodes_fem
