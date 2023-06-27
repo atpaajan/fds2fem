@@ -448,24 +448,22 @@ subroutine dump_abaqus_cradiate()
   cradiate_file=trim(fem_input_file) // '.cradiate'
   open(unit=iochannel(1),file=trim(cradiate_file),status='replace',iostat=ios)
   if (ios /= 0) call error_open_file(cradiate_file)
-  
-  
  
   do j=1,nnodes_fem
 
-! my edit begins here. Also added are the declarations of variables l1, l2, cidx, k and isnt_name.
+     ! my edit begins here. Also added are the declarations of variables l1, l2, cidx, k and isnt_name.
 
-     input_line = adjustl(fem_node_name(j)) !get the node name.
-     cidx = index(input_line, '.')
-     inst_name = input_line(1:cidx-1)  ! finding the instance name
-     l1=len(trim(inst_name))
-     l2 = len(trim(input_line))
-     k = input_line(l1+2:l2)  ! finding the corresponding node number
-	 
-! my edit ends here
-	 
+     !input_line = adjustl(fem_node_name(j)) !get the node name.
+     !cidx = index(input_line, '.')
+     !inst_name = input_line(1:cidx-1)  ! finding the instance name
+     !l1 = len(trim(inst_name))
+     !l2 = len(trim(input_line))
+     !ik = input_line(l1+2:l2)  ! finding the corresponding node number
+
+     ! my edit ends here
+
     write(iochannel(1),'(3(a))') '** Name: Cradiate-BC-', trim(int2str(j)), ' Type: Radiative heat flux'
-    write(iochannel(1),'(2(a))') '*Cradiate, amplitude=AMP-', trim(k) 
+    write(iochannel(1),'(2(a))') '*Cradiate, amplitude=AMP-', trim(int2str(j)) 
     write(iochannel(1),'(2(a),es15.7e3,a,es15.7e3)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, ', abaqus_node_emissivity(j)
   end do
 
@@ -589,7 +587,7 @@ subroutine dump_abaqus_cfilm()
     ! Heat transfer coefficient provided from FDS
     do j=1,nnodes_fem
       write(iochannel(1),'(3(a))') '** Name: Cfilm-BC-', trim(int2str(j)), ' Type: Convective heat flux'
-      write(iochannel(1),'(4(a))') '*Cfilm, amplitude=AMP-', trim(int2str(j)), ', film amplitude=AMP-H-', trim(int2str(j))
+      write(iochannel(1),'(4(a))') '*Cfilm, amplitude=AMP-', trim(int2str(j)), ', film amplitude=AMP-H-', trim(k)
       write(iochannel(1),'(2(a),es15.7e3,a)') trim(fem_node_name(j)), ', ', abaqus_node_area(j), ', 1.0, 1.0'
     end do
 

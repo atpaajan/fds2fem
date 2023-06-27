@@ -1610,14 +1610,22 @@ subroutine locate_bndf_files()
   do ibndf=1,nbndf
     do imesh=1,nmesh
         
-      write(filename,'(a,a,g0,a,g0,a)') trim(fds_chid), &
+      write(filename,'(a,a,i4.4,a,i4.4,a)') trim(fds_chid), &
         '_', imesh, '_', ibndf, '.bf'
-      
+
       inquire(file=filename,exist=file_exists)
       if (.not. file_exists) then
-        write(*,'(3(a))') 'ERROR: BNDF file ', &
-          trim(quote(filename)), ' not found'
-        stop
+
+        write(filename,'(a,a,i0,a,i0,a)') trim(fds_chid), &
+                '_', imesh, '_', ibndf, '.bf'
+      
+        inquire(file=filename,exist=file_exists)
+
+        if (.not. file_exists) then
+          write(*,'(3(a))') 'ERROR: BNDF file ', &
+            trim(quote(filename)), ' not found'
+          stop
+        end if
       end if
     
       fds_bndf_file(ibndf,imesh)=trim(filename)
