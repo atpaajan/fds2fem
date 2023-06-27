@@ -1584,7 +1584,7 @@ subroutine locate_bndf_files()
 !----------------------------------------
 ! Locate FDS BNDF-files
 !----------------------------------------
-! 26.1.2012 Seems to work correctly
+! 27.6.2023 Fixed number formatting issues
 !
 ! WARNING: Does the file name creator
 ! work correctly if there are many files?
@@ -1610,7 +1610,7 @@ subroutine locate_bndf_files()
   do ibndf=1,nbndf
     do imesh=1,nmesh
         
-      write(filename,'(a,a,i4.4,a,i4.4,a)') trim(fds_chid), &
+      write(filename,'(a,a,i4.4,a,i2.2,a)') trim(fds_chid), &
         '_', imesh, '_', ibndf, '.bf'
 
       inquire(file=filename,exist=file_exists)
